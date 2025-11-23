@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/homeFragment">
+
+    <!-- 首页 -->
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="com.example.mini_photo_editor.ui.home.HomeFragment"
+        android:label="首页"
+        tools:layout="@layout/fragment_home" />
+
+    <!-- 其他功能页（暂时用空Fragment） -->
+    <fragment
+        android:id="@+id/otherFragment"
+        android:name="com.example.mini_photo_editor.ui.other.OtherFragment"
+        android:label="其他"
+        tools:layout="@layout/fragment_other" />
+
+    <!-- 我的页面（暂时用空Fragment） -->
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="com.example.mini_photo_editor.ui.profile.ProfileFragment"
+        android:label="我的"
+        tools:layout="@layout/fragment_profile" />
+
+</navigation>

@@ -1,5 +1,9 @@
 <resources>
-    <string name="app_name">mini-photo-editor</string>
+    <!--便于多语言适配，统一文案风格-->
+    <string name="app_name">PhotoEdit</string>          <!-- 应用名称 -->
+    <string name="select_photo">选择照片</string>         <!-- 主按钮文字 -->
+    <string name="recent_edits">最近编辑</string>         <!-- 区域标题 -->
+    <string name="no_recent_edits">暂无编辑记录</string>
     <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="hello_blank_fragment">Hello blank fragment</string>  <!-- 空状态提示 -->
 </resources>

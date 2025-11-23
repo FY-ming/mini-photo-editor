@@ -1,5 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+<!--统一颜色管理，方便后期主题切换和维护-->
+
+    <!-- 主色调 - 品牌识别色，用于重要按钮和操作 -->
+    <color name="primary_blue">#2196F3</color>
+    <color name="primary_dark_blue">#1976D2</color>
+
+    <!-- 背景色 - 页面基底颜色，减少视觉疲劳 -->
+    <color name="bg_grey">#F5F5F5</color>
+    <color name="white">#FFFFFF</color>
+
+    <!-- 文字色 - 建立信息层级：重要文字 vs 次要文字 -->
+    <color name="text_primary">#212121</color>
+    <color name="text_secondary">#757575</color>
 </resources>
