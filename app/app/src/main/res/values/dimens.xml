@@ -22,4 +22,7 @@
     <!-- 圆角 -->
     <dimen name="corner_medium">8dp</dimen>
     <dimen name="corner_large">12dp</dimen>
+
+
+    <dimen name="grid_spacing">2dp</dimen>
 </resources>

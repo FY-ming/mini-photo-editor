@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!--便于多语言适配，统一文案风格-->
     <string name="app_name">PhotoEdit</string>          <!-- 应用名称 -->

@@ -10,16 +10,29 @@
         android:id="@+id/homeFragment"
         android:name="com.example.mini_photo_editor.ui.home.HomeFragment"
         android:label="首页"
-        tools:layout="@layout/fragment_home" />
+        tools:layout="@layout/fragment_home">
 
-    <!-- 其他功能页（暂时用空Fragment） -->
+<!--        &lt;!&ndash; 添加跳转到相册的action &ndash;&gt;-->
+<!--        <action-->
+<!--            android:id="@+id/action_home_to_gallery"-->
+<!--            app:destination="@id/galleryFragment" />-->
+    </fragment>
+
+<!--    &lt;!&ndash; 相册页 &ndash;&gt;-->
+<!--    <fragment-->
+<!--        android:id="@+id/galleryFragment"-->
+<!--        android:name="com.example.mini_photo_editor.ui.gallery.GalleryFragment"-->
+<!--        android:label="相册"-->
+<!--        tools:layout="@layout/fragment_gallery" />-->
+
+    <!-- 其他功能页 -->
     <fragment
         android:id="@+id/otherFragment"
         android:name="com.example.mini_photo_editor.ui.other.OtherFragment"
         android:label="其他"
         tools:layout="@layout/fragment_other" />
 
-    <!-- 我的页面（暂时用空Fragment） -->
+    <!-- 我的页面 -->
     <fragment
         android:id="@+id/profileFragment"
         android:name="com.example.mini_photo_editor.ui.profile.ProfileFragment"
