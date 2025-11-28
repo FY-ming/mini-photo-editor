@@ -1,6 +1,7 @@
 package com.example.mini_photo_editor.data.model
 
 import android.net.Uri
+import androidx.core.net.toUri
 
 /**
  * 媒体项数据模型
@@ -21,16 +22,19 @@ data class MediaItem(
             return listOf(
                 MediaItem(
                     id = 1,
+                    uri = "content://media/external/images/media/1".toUri(),
                     displayName = "测试图片1",
                     dateAdded = System.currentTimeMillis()
                 ),
                 MediaItem(
                     id = 2,
+                    uri = "content://media/external/images/media/2".toUri(),
                     displayName = "测试图片2",
                     dateAdded = System.currentTimeMillis() - 1000
                 ),
                 MediaItem(
                     id = 3,
+                    uri = "content://media/external/images/media/3".toUri(),
                     displayName = "测试图片3",
                     dateAdded = System.currentTimeMillis() - 2000
                 )
