@@ -8,6 +8,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.appbar.MaterialToolbar
 import com.example.mini_photo_editor.R
 import com.example.mini_photo_editor.data.model.MediaItem
+import com.example.mini_photo_editor.ui.editor.EditorFragment
 import com.example.mini_photo_editor.ui.gallery.adapter.MediaAdapter
 
 class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
@@ -58,8 +59,24 @@ class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
     }
 
     private fun navigateToEditor(imageUri: Uri) {
-        // TODO: 跳转到编辑器页
-        println("选择了图片: $imageUri")
-        dismiss()  // 关闭相册对话框
+        try {
+            // 1. 创建编辑器对话框
+            val editorFragment = EditorFragment().apply {
+                // 传递图片URI
+                arguments = Bundle().apply {
+                    putString("imageUri", imageUri.toString())
+                }
+            }
+
+            // 2. 先关闭相册对话框
+            dismiss()
+
+            // 3. 显示编辑器对话框
+            editorFragment.show(parentFragmentManager, "editor_dialog")
+
+        } catch (e: Exception) {
+            println("跳转失败: ${e.message}")
+            dismiss() // 确保相册对话框关闭
+        }
     }
 }
