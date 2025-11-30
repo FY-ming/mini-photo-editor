@@ -1,12 +1,14 @@
 package com.example.mini_photo_editor.ui.gallery
 
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import android.Manifest
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import android.view.View
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.lifecycleScope
@@ -20,20 +22,26 @@ import com.example.mini_photo_editor.ui.gallery.adapter.MediaAdapter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.util.jar.Manifest
 
 class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
-
-    private companion object {
-        private const val READ_EXTERNAL_STORAGE_REQUEST = 100
-    }
-
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: MediaAdapter
 
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            println("✅ 用户授予了存储权限")
+            loadMediaData()
+        } else {
+            println("❌ 用户拒绝了存储权限，使用测试数据")
+            loadTestDataAsFallback()
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setStyle(DialogFragment.STYLE_NORMAL, R.style.FullScreenDialog)
+        setStyle(STYLE_NORMAL, R.style.FullScreenDialog)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -43,60 +51,9 @@ class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
         initViews(view)
         setupRecyclerView()
 
-        // 加载测试用例
-//      loadTestData()
-        // 加载媒体照片
-//      loadMediaData()
-
         // 检查权限并加载数据
         checkPermissionsAndLoadData()
     }
-
-            private fun checkPermissionsAndLoadData() {
-                if (hasReadStoragePermission()) {
-                    loadMediaData()
-                } else {
-                    requestReadStoragePermission()
-                }
-            }
-
-            private fun hasReadStoragePermission(): Boolean {
-                return ContextCompat.checkSelfPermission(
-                    requireContext(),
-                    android.Manifest.permission.READ_EXTERNAL_STORAGE
-                ) == PackageManager.PERMISSION_GRANTED
-            }
-
-            private fun requestReadStoragePermission() {
-                requestPermissions(
-                    arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE),
-                    READ_EXTERNAL_STORAGE_REQUEST
-                )
-            }
-
-            override fun onRequestPermissionsResult(
-                requestCode: Int,
-                permissions: Array<out String>,
-                grantResults: IntArray
-            ) {
-                if (requestCode == READ_EXTERNAL_STORAGE_REQUEST) {
-                    if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                        loadMediaData()
-                    } else {
-                        println("❌ 用户拒绝了存储权限")
-                        // 可以显示一个提示或者使用测试数据
-                        loadTestDataAsFallback()
-                    }
-                }
-            }
-
-            private fun loadTestDataAsFallback() {
-                viewLifecycleOwner.lifecycleScope.launch {
-                    val testItems = MediaItem.createTestItems()
-                    adapter.submitList(testItems)
-                    println("🔄 使用测试数据作为回退方案")
-                }
-            }
     private fun initViews(view: View) {
         // 设置返回按钮
         val toolbar = view.findViewById<MaterialToolbar>(R.id.toolbar)
@@ -123,23 +80,67 @@ class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
         recyclerView.adapter = adapter
     }
 
+    private fun checkPermissionsAndLoadData() {
+        println("🔐 checkPermissionsAndLoadData:检查存储权限")
+
+        if (hasReadStoragePermission()) {
+            println("✅ checkPermissionsAndLoadData:已有存储权限，加载真实数据")
+            loadMediaData()
+        } else {
+            println("🔐 checkPermissionsAndLoadData:请求存储权限")
+            requestAppropriatePermission()
+        }
+    }
+    private fun requestAppropriatePermission() {
+        val permissionToRequest = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            // Android 13+ 使用 READ_MEDIA_IMAGES
+            Manifest.permission.READ_MEDIA_IMAGES
+        } else {
+            // Android 10-12 使用 READ_EXTERNAL_STORAGE
+            Manifest.permission.READ_EXTERNAL_STORAGE
+        }
+
+        println("📱 requestAppropriatePermission请求权限: $permissionToRequest")
+        requestPermissionLauncher.launch(permissionToRequest)
+    }
+
+    private fun hasReadStoragePermission(): Boolean {
+        val permissionToCheck = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            Manifest.permission.READ_MEDIA_IMAGES
+        } else {
+            Manifest.permission.READ_EXTERNAL_STORAGE
+        }
+
+        return ContextCompat.checkSelfPermission(
+            requireContext(),
+            permissionToCheck
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun loadTestDataAsFallback() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val testItems = MediaItem.createTestItems()
+            adapter.submitList(testItems)
+            println("🔄 loadTestDataAsFallback:使用测试数据作为回退方案")
+        }
+    }
+
     private fun loadMediaData() {
         viewLifecycleOwner.lifecycleScope.launch {
-            println("🔄 开始加载媒体数据...")
+            println("🔄 loadMediaData:开始加载媒体数据...")
 
             // 先尝试加载真实数据
             val realItems = loadImagesFromMediaStore()
-            println("📱 真实数据加载完成: ${realItems.size} 项")
+            println("📱 loadMediaData:真实数据加载完成: ${realItems.size} 项")
 
             if (realItems.isNotEmpty()) {
                 // 如果有真实数据，就显示真实数据
                 adapter.submitList(realItems)
-                println("✅ 已显示真实数据")
+                println("✅ loadMediaData:已显示真实数据")
             } else {
                 // 如果没有真实数据，才回退到测试数据
-                val testItems = MediaItem.createTestItems()
-                adapter.submitList(testItems)
-                println("🔄 没有真实数据，使用测试数据: ${testItems.size} 项")
+                println("⚠️ loadMediaData:真实数据为空，使用测试数据")
+                loadTestDataAsFallback()
             }
         }
     }
@@ -148,37 +149,19 @@ class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
         // 这里先简单实现，后续再处理权限
         val mediaItems = mutableListOf<MediaItem>()
 
-        println("🎯 开始查询媒体库...")
+        println("🎯 loadImagesFromMediaStore:开始查询媒体库...")
 
         val projection = arrayOf(
-            android.provider.MediaStore.Images.Media._ID,
-            android.provider.MediaStore.Images.Media.DISPLAY_NAME,
-            android.provider.MediaStore.Images.Media.DATE_ADDED
+            MediaStore.Images.Media._ID,
+            MediaStore.Images.Media.DISPLAY_NAME,
+            MediaStore.Images.Media.DATE_ADDED
         )
 
-        val sortOrder = "${android.provider.MediaStore.Images.Media.DATE_ADDED} DESC"
+        val sortOrder = "${MediaStore.Images.Media.DATE_ADDED} DESC"
 
         val queryUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
 
-//        context?.contentResolver?.query(
-//            queryUri,
-//            projection,
-//            null,  // selection
-//            null,  // selectionArgs
-//            sortOrder
-//        )?.use { cursor ->
-//            while (cursor.moveToNext()) {
-//                try {
-//                    val mediaItem = MediaItem.fromCursor(cursor)
-//                    mediaItems.add(mediaItem)
-//                } catch (e: Exception) {
-//                    println("解析媒体项失败: ${e.message}")
-//                }
-//            }
-//        }
-//
-//        return@withContext mediaItems
-        println("🔍 查询URI: $queryUri")
+        println("🔍 loadImagesFromMediaStore:查询URI: $queryUri")
 
         try {
             context?.contentResolver?.query(
@@ -188,31 +171,33 @@ class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
                 null,
                 sortOrder
             )?.use { cursor ->
-                println("📊 查询到 ${cursor.count} 条记录")
+                println("📊 loadImagesFromMediaStore:查询到 ${cursor.count} 条记录")
 
                 while (cursor.moveToNext()) {
                     try {
                         val mediaItem = MediaItem.fromCursor(cursor)
                         mediaItems.add(mediaItem)
-                        println("✅ 加载图片: ${mediaItem.displayName}")
+                        println("✅ loadImagesFromMediaStore:加载图片: ${mediaItem.displayName}")
                     } catch (e: Exception) {
-                        println("❌ 解析媒体项失败: ${e.message}")
+                        println("❌ loadImagesFromMediaStore:解析媒体项失败: ${e.message}")
                     }
                 }
-            } ?: println("❌ 查询结果为空或失败")
+            } ?: println("❌ loadImagesFromMediaStore:查询结果为空或失败")
 
         } catch (e: SecurityException) {
-            println("🔐 权限异常: ${e.message}")
+            println("🔐 loadImagesFromMediaStore:权限异常: ${e.message}")
         } catch (e: Exception) {
-            println("💥 查询异常: ${e.message}")
+            println("💥 loadImagesFromMediaStore:查询异常: ${e.message}")
         }
 
-        println("🎉 最终加载了 ${mediaItems.size} 张图片")
+        println("🎉 loadImagesFromMediaStore:最终加载了 ${mediaItems.size} 张图片")
         return@withContext mediaItems
     }
 
     private fun navigateToEditor(imageUri: Uri) {
         try {
+            println("🚀 navigateToEditor:跳转到编辑器: $imageUri")
+
             // 1. 创建编辑器对话框
             val editorFragment = EditorFragment().apply {
                 // 传递图片URI
@@ -228,7 +213,7 @@ class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
             editorFragment.show(parentFragmentManager, "editor_dialog")
 
         } catch (e: Exception) {
-            println("跳转失败: ${e.message}")
+            println("navigateToEditor:跳转失败: ${e.message}")
             dismiss() // 确保相册对话框关闭
         }
     }

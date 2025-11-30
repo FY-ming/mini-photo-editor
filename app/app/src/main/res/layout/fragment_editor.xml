@@ -19,15 +19,21 @@
         app:navigationIcon="@drawable/ic_arrow_back"
         app:titleTextColor="@color/white" />
 
-    <!-- OpenGL画布区域 -->
-    <android.opengl.GLSurfaceView
-        android:id="@+id/gl_surface_view"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        app:layout_constraintBottom_toTopOf="@+id/bottom_toolbar"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/toolbar" />
+    <ImageView
+        android:id="@+id/iv_editor_preview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerInside" />
+
+<!--    &lt;!&ndash; OpenGL画布区域 &ndash;&gt;-->
+<!--    <android.opengl.GLSurfaceView-->
+<!--        android:id="@+id/gl_surface_view"-->
+<!--        android:layout_width="0dp"-->
+<!--        android:layout_height="0dp"-->
+<!--        app:layout_constraintBottom_toTopOf="@+id/bottom_toolbar"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintTop_toBottomOf="@+id/toolbar" />-->
 
     <!-- 底部编辑工具栏 -->
     <LinearLayout
