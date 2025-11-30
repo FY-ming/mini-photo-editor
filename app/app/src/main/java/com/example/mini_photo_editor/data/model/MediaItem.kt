@@ -1,6 +1,9 @@
 package com.example.mini_photo_editor.data.model
 
+import android.content.ContentUris
+import android.database.Cursor
 import android.net.Uri
+import android.provider.MediaStore
 import androidx.core.net.toUri
 
 /**
@@ -38,6 +41,25 @@ data class MediaItem(
                     displayName = "测试图片3",
                     dateAdded = System.currentTimeMillis() - 2000
                 )
+            )
+        }
+
+        /**
+         * 从数据库Cursor创建MediaItem对象
+         */
+        fun fromCursor(cursor: Cursor): MediaItem {
+            val id = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID))
+            val displayName = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DISPLAY_NAME))
+            val dateAdded = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_ADDED))
+
+            return MediaItem(
+                id = id,
+                uri = ContentUris.withAppendedId(
+                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                    id
+                ),
+                displayName = displayName ?: "未命名",
+                dateAdded = dateAdded
             )
         }
     }
