@@ -198,23 +198,23 @@ class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
         try {
             println("🚀 navigateToEditor:跳转到编辑器: $imageUri")
 
-            // 1. 创建编辑器对话框
             val editorFragment = EditorFragment().apply {
-                // 传递图片URI
                 arguments = Bundle().apply {
                     putString("imageUri", imageUri.toString())
                 }
             }
 
-            // 2. 先关闭相册对话框
-            dismiss()
-
-            // 3. 显示编辑器对话框
+            // 回到原来的方式，但调整顺序
             editorFragment.show(parentFragmentManager, "editor_dialog")
 
+            // 等一帧再关闭相册，避免看到主页
+            view?.postDelayed({
+                dismiss()
+            }, 50) // 50ms足够
+
         } catch (e: Exception) {
-            println("navigateToEditor:跳转失败: ${e.message}")
-            dismiss() // 确保相册对话框关闭
+            println("❌ 跳转失败: ${e.message}")
+            dismiss()
         }
     }
 }
