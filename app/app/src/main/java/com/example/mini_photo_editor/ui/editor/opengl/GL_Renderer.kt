@@ -15,14 +15,19 @@ class GLRenderer : GLSurfaceView.Renderer {
     private var textureId = 0
     private var bitmap: Bitmap? = null
 
-    // 顶点着色器代码 - 简单的纹理映射
+    private var scale = 1.0f
+    private var translateX = 0.0f
+    private var translateY = 0.0f
+
+    // 更新顶点着色器，支持变换矩阵
     private val vertexShaderCode = """
         #version 300 es
-        layout(location = 0) in vec4 vPosition;
-        layout(location = 1) in vec2 vTexCoord;
+        in vec4 vPosition;
+        in vec2 vTexCoord;
         out vec2 fTexCoord;
+        uniform mat4 uTransform;
         void main() {
-            gl_Position = vPosition;
+            gl_Position = uTransform * vPosition;
             fTexCoord = vTexCoord;
         }
     """.trimIndent()
@@ -89,6 +94,16 @@ class GLRenderer : GLSurfaceView.Renderer {
     override fun onDrawFrame(gl: GL10?) {
         // 清除颜色和深度缓冲区
         GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT or GLES30.GL_DEPTH_BUFFER_BIT)
+
+        // 计算变换矩阵
+        val transformMatrix = FloatArray(16)
+        android.opengl.Matrix.setIdentityM(transformMatrix, 0)
+        android.opengl.Matrix.scaleM(transformMatrix, 0, scale, scale, 1.0f)
+        android.opengl.Matrix.translateM(transformMatrix, 0, translateX, translateY, 0.0f)
+
+        // 传递矩阵到着色器
+        val transformHandle = GLES30.glGetUniformLocation(program, "uTransform")
+        GLES30.glUniformMatrix4fv(transformHandle, 1, false, transformMatrix, 0)
 
         // 使用着色器程序
         GLES30.glUseProgram(program)
@@ -244,5 +259,25 @@ class GLRenderer : GLSurfaceView.Renderer {
         // 禁用顶点属性
         GLES30.glDisableVertexAttribArray(0)
         GLES30.glDisableVertexAttribArray(1)
+    }
+
+    // 添加缩放和平移方法
+    fun scale(factor: Float) {
+        scale *= factor
+        scale = scale.coerceIn(0.1f, 10.0f) // 限制缩放范围
+        println("📏 缩放: $scale")
+    }
+
+    fun translate(dx: Float, dy: Float) {
+        translateX += dx
+        translateY += dy
+        println("📍 平移: ($translateX, $translateY)")
+    }
+
+    fun resetTransform() {
+        scale = 1.0f
+        translateX = 0.0f
+        translateY = 0.0f
+        println("🔄 重置变换")
     }
 }

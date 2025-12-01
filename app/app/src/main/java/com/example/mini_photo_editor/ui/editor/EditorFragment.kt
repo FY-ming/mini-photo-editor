@@ -1,63 +1,37 @@
 package com.example.mini_photo_editor.ui.editor
 
+import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.opengl.GLSurfaceView
 import android.os.Bundle
+import android.view.MotionEvent
 import android.view.View
+import android.widget.Button
 import androidx.fragment.app.DialogFragment
 import com.example.mini_photo_editor.R
 import com.google.android.material.appbar.MaterialToolbar
 import androidx.core.net.toUri
+import androidx.lifecycle.lifecycleScope
 import com.example.mini_photo_editor.ui.editor.opengl.GLRenderer
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.net.URL
+import kotlin.math.sqrt
 
 class EditorFragment : DialogFragment(R.layout.fragment_editor) {
-//    临时处理图像视图
-//    override fun onCreate(savedInstanceState: Bundle?) {
-//        super.onCreate(savedInstanceState)
-//        setStyle(STYLE_NORMAL, R.style.FullScreenDialog)
-//    }
-//
-//    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-//        super.onViewCreated(view, savedInstanceState)
-//
-//        // 设置返回按钮
-//        val toolbar = view.findViewById<MaterialToolbar>(R.id.toolbar)
-//        toolbar.setNavigationOnClickListener {
-//            dismiss() // 关闭编辑器，返回主页
-//        }
-//
-//        // 接收并处理图片
-//        val imageUriString = arguments?.getString("imageUri")
-//        if (!imageUriString.isNullOrEmpty()) {
-//            val imageUri = imageUriString.toUri()
-//            println("编辑器加载图片: $imageUri")
-//
-//            // 临时方案：使用 ImageView 显示图片，跳过 OpenGL
-//            val imageView = view.findViewById<ImageView>(R.id.iv_editor_preview) // 确保布局中有这个ImageView
-//            if (imageView != null) {
-//                Glide.with(this)
-//                    .load(imageUri)
-//                    .into(imageView)
-//                println("✅ 图片已加载到 ImageView")
-//            } else {
-//                println("❌ 找不到 ImageView，请检查布局文件")
-//            }
-//        } else {
-//            println("❌ 没有接收到图片URI")
-//        }
-//    }
     private lateinit var glSurfaceView: GLSurfaceView
     private lateinit var glRenderer: GLRenderer
     private var currentBitmap: Bitmap? = null
 
+    private var lastTouchX = 0f
+    private var lastTouchY = 0f
+    private var isScaling = false
+    private var startDistance = 0f
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setStyle(DialogFragment.STYLE_NORMAL, R.style.FullScreenDialog)
+        setStyle(STYLE_NORMAL, R.style.FullScreenDialog)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -72,15 +46,86 @@ class EditorFragment : DialogFragment(R.layout.fragment_editor) {
         // 初始化 OpenGL
         initOpenGL(view)
 
-//        // 接收图片URI（暂时先打印日志）
-//        val imageUriString = arguments?.getString("imageUri")
-//        if (!imageUriString.isNullOrEmpty()) {
-//            val imageUri = imageUriString.toUri()
-//            println("🎨 编辑器收到图片: $imageUri")
-//            println("⚠️  OpenGL 画布已初始化，但图片渲染待实现")
-//        }
-        // 加载并显示图片
         loadAndDisplayImage()
+
+        // 设置重置按钮
+        view.findViewById<Button>(R.id.btn_reset).setOnClickListener {
+            println("🔄 用户点击重置按钮")
+            glRenderer.resetTransform()
+            glSurfaceView.requestRender()
+        }
+
+        // 添加触摸监听
+        setupTouchListener()
+    }
+    @SuppressLint("ClickableViewAccessibility")
+    private fun setupTouchListener() {
+        glSurfaceView.setOnTouchListener { v, event ->
+            when (event.actionMasked) {
+                MotionEvent.ACTION_DOWN -> {
+                    // 单指按下
+                    lastTouchX = event.x
+                    lastTouchY = event.y
+                    true
+                }
+
+                MotionEvent.ACTION_POINTER_DOWN -> {
+                    // 第二根手指按下，开始缩放
+                    if (event.pointerCount == 2) {
+                        isScaling = true
+                        startDistance = getFingerDistance(event)
+                    }
+                    true
+                }
+
+                MotionEvent.ACTION_MOVE -> {
+                    if (isScaling && event.pointerCount == 2) {
+                        // 双指缩放
+                        val currentDistance = getFingerDistance(event)
+                        val scaleFactor = currentDistance / startDistance
+
+                        glRenderer.scale(scaleFactor)
+                        glSurfaceView.requestRender()
+
+                        startDistance = currentDistance
+                    } else if (!isScaling && event.pointerCount == 1) {
+                        // 单指平移
+                        val dx = (event.x - lastTouchX) / glSurfaceView.width * 2
+                        val dy = (event.y - lastTouchY) / glSurfaceView.height * 2
+
+                        glRenderer.translate(dx, -dy) // -dy更正竖直方向照片平移方向
+                        glSurfaceView.requestRender()
+
+                        lastTouchX = event.x
+                        lastTouchY = event.y
+                    }
+                    true
+                }
+
+                MotionEvent.ACTION_POINTER_UP -> {
+                    // 一根手指抬起，结束缩放
+                    if (event.pointerCount == 2) {
+                        isScaling = false
+                    }
+                    true
+                }
+
+                MotionEvent.ACTION_UP -> {
+                    // 所有手指抬起
+                    isScaling = false
+                    v.performClick()  // 关键修复
+                    true
+                }
+
+                else -> false
+            }
+        }
+    }
+
+    private fun getFingerDistance(event: MotionEvent): Float {
+        val dx = event.getX(0) - event.getX(1)
+        val dy = event.getY(0) - event.getY(1)
+        return sqrt(dx * dx + dy * dy)
     }
 
     private fun initOpenGL(view: View) {
@@ -106,7 +151,7 @@ class EditorFragment : DialogFragment(R.layout.fragment_editor) {
             println("🎨 开始加载图片: $imageUri")
 
             // 在后台线程加载图片
-            GlobalScope.launch(Dispatchers.IO) {
+            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
                 try {
                     // 从 URI 加载 Bitmap
                     val bitmap = if (imageUri.scheme == "content") {
@@ -144,13 +189,13 @@ class EditorFragment : DialogFragment(R.layout.fragment_editor) {
 
     override fun onResume() {
         super.onResume()
-        glSurfaceView?.onResume()
+        glSurfaceView.onResume()
         println("▶️ 编辑器恢复")
     }
 
     override fun onPause() {
         super.onPause()
-        glSurfaceView?.onPause()
+        glSurfaceView.onPause()
         println("⏸️ 编辑器暂停")
     }
 

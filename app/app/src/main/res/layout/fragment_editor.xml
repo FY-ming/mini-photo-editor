@@ -19,13 +19,6 @@
         app:navigationIcon="@drawable/ic_arrow_back"
         app:titleTextColor="@color/white" />
 
-<!--    临时图片视图（临时代替openGL画布）-->
-<!--    <ImageView-->
-<!--        android:id="@+id/iv_editor_preview"-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="match_parent"-->
-<!--        android:scaleType="centerInside" />-->
-
     <!-- OpenGL画布区域 -->
     <android.opengl.GLSurfaceView
         android:id="@+id/gl_surface_view"
@@ -57,6 +50,13 @@
             android:text="裁剪"
             android:background="@android:color/transparent"
             android:textColor="@color/primary_blue" />
+
+        <Button
+            android:id="@+id/btn_reset"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="重置位置"
+            android:paddingHorizontal="24dp" />
 
         <Button
             android:id="@+id/btn_save"
