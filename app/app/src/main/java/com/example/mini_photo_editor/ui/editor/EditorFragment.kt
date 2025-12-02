@@ -14,8 +14,11 @@ import com.google.android.material.appbar.MaterialToolbar
 import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
 import com.example.mini_photo_editor.ui.editor.opengl.GLRenderer
+import com.example.mini_photo_editor.ui.export.ExportFragment
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.io.File
+import java.io.FileOutputStream
 import java.net.URL
 import kotlin.math.sqrt
 
@@ -54,7 +57,10 @@ class EditorFragment : DialogFragment(R.layout.fragment_editor) {
             glRenderer.resetTransform()
             glSurfaceView.requestRender()
         }
-
+        view.findViewById<Button>(R.id.btn_export).setOnClickListener {
+            println("📤 用户点击导出按钮")
+            exportCurrentImage()
+        }
         // 添加触摸监听
         setupTouchListener()
     }
@@ -205,5 +211,42 @@ class EditorFragment : DialogFragment(R.layout.fragment_editor) {
         currentBitmap?.recycle()
         currentBitmap = null
         println("🗑️ 编辑器销毁，资源已清理")
+    }
+
+    private fun exportCurrentImage() {
+        currentBitmap?.let { bitmap ->
+            // 创建临时文件保存当前状态
+            val tempDir = requireContext().cacheDir
+            val tempFile = File(tempDir, "temp_export_${System.currentTimeMillis()}.jpg")
+
+            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                try {
+                    // 保存 bitmap 到临时文件
+                    val fos = FileOutputStream(tempFile)
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 90, fos)
+                    fos.close()
+
+                    launch(Dispatchers.Main) {
+                        // 显示导出对话框
+                        val exportFragment = ExportFragment.newInstance(tempFile.absolutePath)
+                        exportFragment.show(parentFragmentManager, "export_dialog")
+                    }
+                } catch (e: Exception) {
+                    launch(Dispatchers.Main) {
+                        android.widget.Toast.makeText(
+                            requireContext(),
+                            "导出失败: ${e.message}",
+                            android.widget.Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+            }
+        } ?: run {
+            android.widget.Toast.makeText(
+                requireContext(),
+                "没有图片可导出",
+                android.widget.Toast.LENGTH_SHORT
+            ).show()
+        }
     }
 }

@@ -48,24 +48,26 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="裁剪"
-            android:background="@android:color/transparent"
-            android:textColor="@color/primary_blue" />
+            android:textColor="@color/primary_blue"
+            android:background="@android:color/transparent" />
 
         <Button
             android:id="@+id/btn_reset"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="重置位置"
-            android:paddingHorizontal="24dp" />
-
-        <Button
-            android:id="@+id/btn_save"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="保存"
-            android:background="@android:color/transparent"
-            android:textColor="@color/primary_blue" />
+            android:text="重置位置"
+            android:textColor="@color/primary_blue"
+            android:background="@android:color/transparent" />
+
+        <Button
+            android:id="@+id/btn_export"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="导出"
+            android:textColor="@color/primary_blue"
+            android:background="@android:color/transparent" />
 
     </LinearLayout>
 
