@@ -8,6 +8,7 @@ import android.widget.TextView
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.example.mini_photo_editor.R
 import com.example.mini_photo_editor.ui.home.customview.ShineEffectView
 import com.example.mini_photo_editor.ui.home.data.BannerItem
@@ -41,6 +42,11 @@ class BannerAdapter : RecyclerView.Adapter<BannerAdapter.ViewHolder>() {
 
         // 在ViewHolder类内部绑定数据
         fun bind(item: BannerItem) {
+            // 使用Glide加载图片（自动识别GIF）
+            Glide.with(itemView.context)
+                .load(item.imageRes)
+                .into(ivBanner)
+
             // 设置图片图片、标题、描述信息
             ivBanner.setImageResource(item.imageRes)
             tvTitle.text = item.title

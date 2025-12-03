@@ -52,7 +52,7 @@ data class BannerItem(
                     id = 3,
                     title = "GIF",
                     description = "多媒体GIF效果展示",
-                    mediaUrl = "https://example.com/filter_demo.gif",
+                    imageRes = R.drawable.gif1,
                     mediaType = MediaType.GIF,
                     shineColor = 0xFFFFC107.toInt(), // 黄色
                     shineSpeed = 1.0f
