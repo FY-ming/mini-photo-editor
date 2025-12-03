@@ -52,13 +52,13 @@ class BannerAdapter : RecyclerView.Adapter<BannerAdapter.ViewHolder>() {
             tvTitle.text = item.title
             tvDesc.text = item.description
 
-            // 根据类型设置不同标题的样式
-            val textColor = when (item.type) {
-                BannerType.PHOTO -> R.color.white
-                BannerType.GIF -> R.color.primary_blue
-                BannerType.VIDEO -> R.color.accent
-            }
-            tvTitle.setTextColor(ContextCompat.getColor(itemView.context, textColor))
+//            // 根据类型设置不同标题的样式
+//            val textColor = when (item.type) {
+//                BannerType.PHOTO -> R.color.white
+//                BannerType.GIF -> R.color.primary_blue
+//                BannerType.VIDEO -> R.color.accent
+//            }
+//            tvTitle.setTextColor(ContextCompat.getColor(itemView.context, textColor))
 
             // 根据BannerType设置类型标签
             tvType.text = when (item.type) {

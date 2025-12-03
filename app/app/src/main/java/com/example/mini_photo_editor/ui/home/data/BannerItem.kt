@@ -34,6 +34,7 @@ data class BannerItem(
                     description = "自定义view展示",
                     imageRes = R.drawable.banner_photo1,
                     mediaType = MediaType.IMAGE,
+                    type = BannerType.PHOTO,
                     shineColor = 0xFFFFFFFF.toInt(),
                     shineSpeed = 3.0f
                 ),
@@ -44,6 +45,7 @@ data class BannerItem(
                     description = "自定义view展示2",
                     imageRes = R.drawable.banner_photo2,
                     mediaType = MediaType.IMAGE,
+                    type = BannerType.PHOTO,
                     shineColor = 0xFF2196F3.toInt(), // 蓝色
                     shineSpeed = 2.0f
                 ),
@@ -54,6 +56,7 @@ data class BannerItem(
                     description = "多媒体GIF效果展示",
                     imageRes = R.drawable.gif1,
                     mediaType = MediaType.GIF,
+                    type = BannerType.GIF,
                     shineColor = 0xFFFFC107.toInt(), // 黄色
                     shineSpeed = 1.0f
                 ),
@@ -64,6 +67,7 @@ data class BannerItem(
                     description = "多媒体视频展示",
                     mediaUrl = "https://example.com/tutorial.mp4",
                     mediaType = MediaType.VIDEO,
+                    type = BannerType.VIDEO,
                     shineColor = 0xFF00BCD4.toInt(), // 青色
                     shineSpeed = 0.5f
                 )
