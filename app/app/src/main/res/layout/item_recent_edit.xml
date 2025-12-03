@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="@dimen/recent_item_size"
+    android:layout_height="@dimen/recent_item_size"
+    android:layout_margin="@dimen/recent_item_margin"
+    app:cardCornerRadius="@dimen/corner_medium"
+    app:cardElevation="2dp"
+    app:cardBackgroundColor="@color/white">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <!-- 图片预览 -->
+        <ImageView
+            android:id="@+id/iv_preview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_photo"
+            android:contentDescription="最近编辑的图片"
+            android:background="@color/bg_grey" />
+
+        <!-- 渐变蒙层 -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_image_overlay" />
+
+        <!-- 编辑时间 -->
+        <TextView
+            android:id="@+id/tv_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentEnd="true"
+            android:layout_margin="@dimen/spacing_small"
+            android:text="1小时前"
+            android:textColor="@color/white"
+            android:textSize="@dimen/text_small"
+            android:shadowColor="@color/black"
+            android:shadowRadius="1" />
+
+        <!-- 正在编辑状态指示器 -->
+        <View
+            android:id="@+id/view_editing"
+            android:layout_width="8dp"
+            android:layout_height="8dp"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentEnd="true"
+            android:layout_margin="@dimen/spacing_small"
+            android:background="@drawable/bg_editing_indicator"
+            android:visibility="gone" />
+
+    </RelativeLayout>
+
+</androidx.cardview.widget.CardView>

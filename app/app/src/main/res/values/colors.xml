@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
     <!-- 主色调 -->
     <color name="primary_blue">#2196F3</color>
     <color name="primary_dark_blue">#1976D2</color>
@@ -8,6 +9,8 @@
     <color name="bg_grey">#F5F5F5</color>
     <color name="white">#FFFFFF</color>
     <color name="black">#000000</color>
+    <color name="surface">#2D2B36</color>
+    <color name="primary_surface">#3A3750</color>
 
     <!-- 文字色 -->
     <color name="text_primary">#212121</color>
@@ -16,12 +19,13 @@
 
     <!-- 状态色 -->
     <color name="button_pressed">#1976D2</color>
+    <color name="error">#F2B8B5</color>
+    <color name="success">#C9EBC7</color>
 
     <color name="primary">#6200EE</color>
     <color name="primary_dark">#3700B3</color>
     <color name="accent">#03DAC5</color>
     <color name="background_dark">#1C1B1F</color>
-    <color name="surface">#2D2B36</color>
     <color name="gray">#9E9E9E</color>
     <color name="purple_200">#FFBB86FC</color>
     <color name="purple_500">#FF6200EE</color>
