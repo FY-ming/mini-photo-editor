@@ -142,7 +142,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
 
     private fun startAutoScroll() {
         bannerTimer = Timer()
-        bannerTimer?.scheduleAtFixedRate(0, 4000) {
+        bannerTimer?.scheduleAtFixedRate(4000, 4000) {
             requireActivity().runOnUiThread {
                 val nextPosition = (currentBannerPosition + 1) % bannerAdapter.itemCount
                 binding.banner.viewPager.currentItem = nextPosition
