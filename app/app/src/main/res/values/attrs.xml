@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 扫光效果View属性 -->
+    <declare-styleable name="ShineEffectView">
+        <attr name="shineColor" format="color" />
+        <attr name="shineWidth" format="dimension" />
+        <attr name="shineAlpha" format="float" />
+        <attr name="shineSpeed" format="float" />
+    </declare-styleable>
+</resources>

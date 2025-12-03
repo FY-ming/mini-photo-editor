@@ -3,7 +3,6 @@ package com.example.mini_photo_editor.ui.home
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.Toast
@@ -18,6 +17,7 @@ import com.example.mini_photo_editor.databinding.LayoutRecentEditsBinding
 import com.example.mini_photo_editor.ui.gallery.GalleryFragment
 import com.example.mini_photo_editor.ui.home.adapter.BannerAdapter
 import com.example.mini_photo_editor.ui.home.data.BannerItem
+import com.example.mini_photo_editor.ui.home.data.MediaType
 import java.util.Timer
 import kotlin.concurrent.scheduleAtFixedRate
 
@@ -56,14 +56,15 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     }
 
     private fun setupBanner() {
-// 1. 创建适配器
+        // 创建适配器
         bannerAdapter = BannerAdapter()
 
-        // 2. 设置ViewPager2
-        val viewPager = binding.banner.viewPager  // 确保布局中有这个id
+        // 设置ViewPager2
+        val viewPager = requireView().findViewById<ViewPager2>(R.id.viewPager)
 
         viewPager.adapter = bannerAdapter
         viewPager.offscreenPageLimit = 3
+
         viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)
@@ -72,24 +73,27 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
             }
         })
 
-        // 3. 加载数据 - 先使用占位图，等你有图片了再替换
-        val bannerItems = listOf(
-            BannerItem(1, "轮播图1", R.drawable.banner_photo1),
-            BannerItem(2, "轮播图2", R.drawable.banner_photo2),
-            BannerItem(3, "轮播图3", R.drawable.banner_photo3),
-        )
+        // 加载数据
+        val bannerItems = BannerItem.createTutorialItems()
         bannerAdapter.submitList(bannerItems)
 
-        // 4. 设置指示器
+
+        // 设置指示器
         setupIndicators(bannerItems.size)
 
-        // 5. 设置点击事件
+        // 设置点击事件
         bannerAdapter.onItemClick = { item ->
-            Toast.makeText(
-                requireContext(),
-                "点击了: ${item.title}",
-                Toast.LENGTH_SHORT
-            ).show()
+            when (item.mediaType) {
+                MediaType.IMAGE -> {
+                    Toast.makeText(requireContext(), "查看图片: ${item.title}", Toast.LENGTH_SHORT).show()
+                }
+                MediaType.GIF -> {
+                    Toast.makeText(requireContext(), "查看GIF演示: ${item.title}", Toast.LENGTH_SHORT).show()
+                }
+                MediaType.VIDEO -> {
+                    Toast.makeText(requireContext(), "播放视频教程: ${item.title}", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
 
         // 6. 启动自动轮播（可选）
@@ -144,11 +148,6 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
                 binding.banner.viewPager.currentItem = nextPosition
             }
         }
-    }
-
-    private fun stopAutoScroll() {
-        bannerTimer?.cancel()
-        bannerTimer = null
     }
 
 
