@@ -51,16 +51,16 @@ cd mini-photo-editor
 
 
 <div style="text-align: center;">
- <img src="./my-notes/README_PHOTO/image1.png" alt="主页展示" width="300">
+ <img src="./README_PHOTO/image1.png" alt="主页展示" width="300">
 </div>
 <div style="text-align: center;">
- <img src="./my-notes/README_PHOTO/image2.png" alt="相册页展示" width="300">
+ <img src="./README_PHOTO/image2.png" alt="相册页展示" width="300">
  <div style="text-align: center;">
- <img src="./my-notes/README_PHOTO/image3.png" alt="编辑页展示" width="300">
+ <img src="./README_PHOTO/image3.png" alt="编辑页展示" width="300">
  <div style="text-align: center;">
- <img src="./my-notes/README_PHOTO/image4.png" alt="裁剪框展示" width="300">
+ <img src="./README_PHOTO/image4.png" alt="裁剪框展示" width="300">
  <div style="text-align: center;">
- <img src="./my-notes/README_PHOTO/image5.png" alt="导出页展示" width="300">
+ <img src="./README_PHOTO/image5.png" alt="导出页展示" width="300">
 
 
 
