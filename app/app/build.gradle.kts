@@ -21,10 +21,11 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true      //  开启代码压缩 + 混淆
+            isShrinkResources = true    //  去除无用资源（仅 APK 有效）
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro"   //  你自己的混淆规则文件
             )
         }
     }
