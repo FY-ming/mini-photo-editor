@@ -88,6 +88,16 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/toolbar" />
 
+    <!-- 裁剪覆盖层：放在 GLSurfaceView 之后，布局上系在同一层级，使其覆盖 -->
+    <com.example.mini_photo_editor.ui.editor.CropOverlayView
+        android:id="@+id/crop_overlay"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/toolbar"
+        app:layout_constraintBottom_toTopOf="@id/bottom_tools"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
 
     <!-- 底部工具条 -->
     <LinearLayout

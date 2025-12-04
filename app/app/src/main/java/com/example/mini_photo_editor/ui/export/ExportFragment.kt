@@ -114,85 +114,46 @@ class ExportFragment : DialogFragment(), CoroutineScope {
     }
 
     private fun exportImage() {
-        currentBitmap?.let { bitmap ->
-            progressBar.visibility = View.VISIBLE
-            btnExport.isEnabled = false
+        val bitmap = currentBitmap ?: return
 
-            launch(Dispatchers.IO) {
-                try {
-                    val savedUri = saveBitmapToGallery(bitmap)
+        progressBar.visibility = View.VISIBLE
+        btnExport.isEnabled = false
 
-                    withContext(Dispatchers.Main) {
-                        progressBar.visibility = View.GONE
-                        btnExport.isEnabled = true
+        launch {
+            val uri = saveBitmapToGallery(bitmap)
 
-                        if (savedUri != null) {
-                            Toast.makeText(requireContext(), "图片已保存到相册", Toast.LENGTH_LONG).show()
-                            dismiss()
-                        } else {
-                            Toast.makeText(requireContext(), "保存失败，请检查权限", Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                } catch (e: Exception) {
-                    withContext(Dispatchers.Main) {
-                        progressBar.visibility = View.GONE
-                        btnExport.isEnabled = true
-                        Toast.makeText(requireContext(), "保存异常: ${e.message}", Toast.LENGTH_SHORT).show()
-                    }
-                }
-            }
-        } ?: run {
-            Toast.makeText(requireContext(), "没有图片可导出", Toast.LENGTH_SHORT).show()
+            progressBar.visibility = View.GONE
+            btnExport.isEnabled = true
+            Toast.makeText(requireContext(), "导出成功 ✅", Toast.LENGTH_SHORT).show()
+
+            dismiss()
         }
     }
 
-    private fun saveBitmapToGallery(bitmap: Bitmap): Uri? {
+    private fun saveBitmapToGallery(bitmap: Bitmap) : Uri? {
         val resolver = requireContext().contentResolver
-        val imageCollection = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-        } else {
-            MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+        val contentValues = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, "MiniEditor_${System.currentTimeMillis()}.jpg")
+            put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
+            put(MediaStore.MediaColumns.RELATIVE_PATH, "Pictures/MiniPhotoEditor")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                put(MediaStore.MediaColumns.IS_PENDING, 1)
+            }
         }
 
-        val fileName = generateFileName()
-
-        val contentValues = ContentValues().apply {
-            put(MediaStore.Images.Media.DISPLAY_NAME, fileName)
-            put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
-            put(MediaStore.Images.Media.DATE_ADDED, System.currentTimeMillis() / 1000)
-            put(MediaStore.Images.Media.DATE_TAKEN, System.currentTimeMillis())
+        val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+        uri?.let {
+            resolver.openOutputStream(it)?.use { fos ->
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos)
+            }
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/MiniPhotoEditor")
-                put(MediaStore.Images.Media.IS_PENDING, 1)
+                contentValues.clear()
+                contentValues.put(MediaStore.MediaColumns.IS_PENDING, 0)
+                resolver.update(it, contentValues, null, null)
             }
         }
-
-        return try {
-            val uri = resolver.insert(imageCollection, contentValues)
-            uri?.let { imageUri ->
-                resolver.openOutputStream(imageUri)?.use { outputStream ->
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream)
-                }
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    contentValues.clear()
-                    contentValues.put(MediaStore.Images.Media.IS_PENDING, 0)
-                    resolver.update(uri, contentValues, null, null)
-                }
-
-                println("✅ 图片保存成功: $uri")
-                uri
-            }
-        } catch (e: Exception) {
-            println("❌ 保存失败: ${e.message}")
-            null
-        }
-    }
-
-    private fun generateFileName(): String {
-        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-        return "MiniEditor_${timeStamp}.jpg"
+        return uri
     }
 
     override fun onDestroy() {

@@ -3,6 +3,7 @@ package com.example.mini_photo_editor.ui.editor
 import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Rect
 import android.opengl.GLSurfaceView
 import android.os.Bundle
 import android.view.MotionEvent
@@ -15,6 +16,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.mini_photo_editor.ui.editor.opengl.GLRenderer
+import androidx.navigation.fragment.findNavController
 import com.example.mini_photo_editor.ui.export.ExportFragment
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -22,16 +24,23 @@ import java.io.File
 import java.io.FileOutputStream
 import java.net.URL
 import kotlin.math.sqrt
+import kotlin.math.min
+import kotlin.math.max
 
 class EditorFragment : DialogFragment(R.layout.fragment_editor) {
+    // GL画布
     private lateinit var glSurfaceView: GLSurfaceView
     private lateinit var glRenderer: GLRenderer
     private var currentBitmap: Bitmap? = null
-
+    // 裁剪框
+    private lateinit var cropOverlay: CropOverlayView
     private var lastTouchX = 0f
     private var lastTouchY = 0f
     private var isScaling = false
     private var startDistance = 0f
+
+    // 当前裁剪框区域（像素坐标）
+    private var cropRect: Rect? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,7 +62,6 @@ class EditorFragment : DialogFragment(R.layout.fragment_editor) {
 
         // 设置顶部工具栏按钮
         setupTopToolbar(view)
-
         // 设置底部工具按钮
         setupBottomTools(view)
 
@@ -61,9 +69,59 @@ class EditorFragment : DialogFragment(R.layout.fragment_editor) {
         initOpenGL(view)
         loadAndDisplayImage()
 
+        // 初始化裁剪框，设置监听
+        cropOverlay = view.findViewById(R.id.crop_overlay)
+        // 监听器
+        cropOverlay.setOnCropConfirmListener { rectViewCoords ->
+            // rectViewCoords 是 View 坐标系（左/上/右/下）——把它转成 Bitmap 像素坐标并裁剪
+            setCropRectFromView(rectViewCoords.left.toFloat(), rectViewCoords.top.toFloat(), rectViewCoords.right.toFloat(), rectViewCoords.bottom.toFloat())
+
+            // 执行裁剪并更新预览
+            applyCrop()
+
+            // 隐藏 overlay
+            cropOverlay.hide()
+        }
+
+        cropOverlay.setOnCropCancelListener {
+            cropOverlay.hide()
+        }
         // 添加触摸监听
         setupTouchListener()
     }
+
+    private fun setCropRectFromView(viewLeft: Float, viewTop: Float, viewRight: Float, viewBottom: Float) {
+        // 把 View 坐标转换为 Bitmap 像素坐标
+        val bitmap = currentBitmap ?: return
+
+        // GLSurfaceView 的显示区域尺寸（View 尺寸）
+        val viewWidth = glSurfaceView.width.toFloat()
+        val viewHeight = glSurfaceView.height.toFloat()
+
+        if (viewWidth <= 0 || viewHeight <= 0) {
+            println("⚠️ GLSurfaceView 尺寸为 0，无法转换")
+            return
+        }
+
+        // 映射比例（bitmap -> view）
+        val scaleX = bitmap.width.toFloat() / viewWidth
+        val scaleY = bitmap.height.toFloat() / viewHeight
+
+        val realLeft = (viewLeft * scaleX).toInt().coerceIn(0, bitmap.width - 1)
+        val realTop = (viewTop * scaleY).toInt().coerceIn(0, bitmap.height - 1)
+        val realRight = (viewRight * scaleX).toInt().coerceIn(1, bitmap.width)
+        val realBottom = (viewBottom * scaleY).toInt().coerceIn(1, bitmap.height)
+
+        // 修正边界
+        val left = min(realLeft, realRight - 1)
+        val top = min(realTop, realBottom - 1)
+        val right = max(realRight, left + 1)
+        val bottom = max(realBottom, top + 1)
+
+        cropRect = Rect(left, top, right, bottom)
+        println("➡️ 转换后的裁剪像素坐标: $cropRect")
+    }
+
     private fun setupTopToolbar(view: View) {
         // 给容器设置点击事件
         view.findViewById<View>(R.id.btn_back_container).setOnClickListener {
@@ -80,7 +138,8 @@ class EditorFragment : DialogFragment(R.layout.fragment_editor) {
     private fun setupBottomTools(view: View) {
         // 裁剪按钮
         view.findViewById<View>(R.id.btn_crop).setOnClickListener {
-            showCropTool()
+            // 显示裁剪交互
+            cropOverlay.show()
         }
 
         // 滤镜按钮
@@ -110,14 +169,24 @@ class EditorFragment : DialogFragment(R.layout.fragment_editor) {
             glSurfaceView.requestRender()
         }
     }
-    // 以下是各个工具的功能实现（占位符）
 
-    private fun showCropTool() {
-        println("✂️ 显示裁剪工具")
-        // TODO: 实现裁剪功能
-        // 1. 显示裁剪界面
-        // 2. 添加裁剪框
-        // 3. 处理裁剪逻辑
+    // 以下是各个工具的功能实现/占位符
+
+    private fun applyCrop() {
+        // 裁剪
+        val sourceBitmap = currentBitmap ?: return
+        val rect = cropRect ?: return
+
+        // 执行裁剪
+        val croppedBitmap = BitmapCropper.crop(sourceBitmap, rect)
+
+        // 更新当前bitmap
+        currentBitmap = croppedBitmap
+
+        // 重新传入OpenGL进行预览
+        glSurfaceView.queueEvent {
+            glRenderer.setBitmap(croppedBitmap)
+        }
     }
 
     private fun showFilterTool() {
@@ -302,38 +371,14 @@ class EditorFragment : DialogFragment(R.layout.fragment_editor) {
 
     private fun exportCurrentImage() {
         currentBitmap?.let { bitmap ->
-            // 创建临时文件保存当前状态
-            val tempDir = requireContext().cacheDir
-            val tempFile = File(tempDir, "temp_export_${System.currentTimeMillis()}.jpg")
-
-            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-                try {
-                    // 保存 bitmap 到临时文件
-                    val fos = FileOutputStream(tempFile)
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 90, fos)
-                    fos.close()
-
-                    launch(Dispatchers.Main) {
-                        // 显示导出对话框
-                        val exportFragment = ExportFragment.newInstance(tempFile.absolutePath)
-                        exportFragment.show(parentFragmentManager, "export_dialog")
-                    }
-                } catch (e: Exception) {
-                    launch(Dispatchers.Main) {
-                        android.widget.Toast.makeText(
-                            requireContext(),
-                            "导出失败: ${e.message}",
-                            android.widget.Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                }
+            val tempFile = File(requireContext().cacheDir, "temp_crop_${System.currentTimeMillis()}.jpg")
+            FileOutputStream(tempFile).use { fos ->
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 90, fos)
             }
-        } ?: run {
-            android.widget.Toast.makeText(
-                requireContext(),
-                "没有图片可导出",
-                android.widget.Toast.LENGTH_SHORT
-            ).show()
+
+            val exportDialog = ExportFragment.newInstance(tempFile.absolutePath)
+            exportDialog.show(parentFragmentManager, "export_dialog")
         }
     }
+
 }

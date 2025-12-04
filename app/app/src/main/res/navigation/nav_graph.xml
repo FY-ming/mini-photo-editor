@@ -28,6 +28,12 @@
             app:argType="string" />
     </fragment>
 
+    <fragment
+        android:id="@+id/exportFragment"
+        android:name="com.example.mini_photo_editor.ui.export.ExportFragment"
+        android:label="导出图片"
+        tools:layout="@layout/fragment_export"/>
+
     <!-- 其他功能页 -->
     <fragment
         android:id="@+id/otherFragment"
