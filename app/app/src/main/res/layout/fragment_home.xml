@@ -2,200 +2,39 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/bg_grey"
     android:padding="@dimen/spacing_large">
 
-<!--    <LinearLayout-->
-<!--        android:id="@+id/header_container"-->
-<!--        android:layout_width="0dp"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:gravity="center"-->
-<!--        android:orientation="vertical"-->
-<!--        android:paddingVertical="@dimen/spacing_medium"-->
-<!--        app:layout_constraintEnd_toEndOf="parent"-->
-<!--        app:layout_constraintStart_toStartOf="parent"-->
-<!--        app:layout_constraintTop_toTopOf="parent">-->
+    <ScrollView
+        android:id="@+id/scroll_content"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:padding="0dp"
+        android:fillViewport="true"
+        android:clipToPadding="false"
+        android:overScrollMode="never"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent">
 
-<!--        &lt;!&ndash; Logo和App名称：水平布局 &ndash;&gt;-->
-<!--        <LinearLayout-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:gravity="center"-->
-<!--            android:orientation="horizontal"-->
-<!--            android:layout_marginBottom="@dimen/spacing_small">-->
+        <LinearLayout
+            android:id="@+id/page_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="start">
 
-<!--            <ImageView-->
-<!--                android:layout_width="28dp"-->
-<!--                android:layout_height="28dp"-->
-<!--                android:src="@drawable/ic_photo"-->
-<!--                android:layout_marginEnd="@dimen/spacing_small"-->
-<!--                android:contentDescription="@string/app_name"-->
-<!--                app:tint="@color/primary" />-->
+            <include android:id="@+id/banner" layout="@layout/layout_banner"/>
+            <include android:id="@+id/main_tools" layout="@layout/layout_main_tools"/>
+            <include android:id="@+id/quick_tools" layout="@layout/layout_quick_tools"/>
+            <include android:id="@+id/recent_edits" layout="@layout/layout_recent_edits"/>
+            <include layout="@layout/layout_filter_templates"/>
 
-<!--            <TextView-->
-<!--                android:layout_width="wrap_content"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                android:text="@string/app_name"-->
-<!--                android:textColor="@color/text_primary"-->
-<!--                android:textSize="@dimen/text_title"-->
-<!--                android:textStyle="bold" />-->
-<!--        </LinearLayout>-->
+        </LinearLayout>
 
-<!--        &lt;!&ndash; 副标题 &ndash;&gt;-->
-<!--        <TextView-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:text="图片编辑工具"-->
-<!--            android:textColor="@color/text_secondary"-->
-<!--            android:textSize="@dimen/text_subtitle" />-->
-<!--    </LinearLayout>-->
-
-    <LinearLayout
-        android:layout_width="377dp"
-        android:layout_height="698dp"
-        android:orientation="vertical"
-        tools:layout_editor_absoluteX="-5dp"
-        tools:layout_editor_absoluteY="-3dp"
-        tools:ignore="MissingConstraints">
-
-        <!-- 1. 顶部轮播图 -->
-        <include
-            android:id="@+id/banner"
-            layout="@layout/layout_banner" />
-
-        <!-- 2. 主功能入口：导入、相机、拼图 -->
-        <include
-            android:id="@+id/main_tools"
-            layout="@layout/layout_main_tools" />
-
-        <!-- 3. 快捷工具栏 -->
-        <include
-            android:id="@+id/quick_tools"
-            layout="@layout/layout_quick_tools" />
-
-        <!-- 4. 最近编辑 -->
-        <include
-            android:id="@+id/recent_edits"
-            layout="@layout/layout_recent_edits" />
-
-        <!-- 5. 滤镜模板 -->
-        <include layout="@layout/layout_filter_templates" />
-
-    </LinearLayout>
-
-    <!--    &lt;!&ndash; 主操作按钮：使用选择器实现按压效果 &ndash;&gt;-->
-<!--    <Button-->
-<!--        android:id="@+id/btn_select_photo"-->
-<!--        android:layout_width="0dp"-->
-<!--        android:layout_height="@dimen/button_height"-->
-<!--        android:layout_marginTop="@dimen/spacing_xlarge"-->
-<!--        android:background="@drawable/bg_primary_button_selector"-->
-<!--        android:text="@string/select_photo"-->
-<!--        android:textColor="@color/white"-->
-<!--        android:textSize="@dimen/text_body"-->
-<!--        android:textStyle="bold"-->
-<!--        app:layout_constraintEnd_toEndOf="parent"-->
-<!--        app:layout_constraintStart_toStartOf="parent"-->
-<!--        app:layout_constraintTop_toBottomOf="@id/header_container" />-->
-
-<!--    &lt;!&ndash; 最近编辑区域 &ndash;&gt;-->
-<!--    <LinearLayout-->
-<!--        android:id="@+id/recent_container"-->
-<!--        android:layout_width="0dp"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:orientation="vertical"-->
-<!--        android:layout_marginTop="@dimen/spacing_xlarge"-->
-<!--        app:layout_constraintEnd_toEndOf="parent"-->
-<!--        app:layout_constraintStart_toStartOf="parent"-->
-<!--        app:layout_constraintTop_toBottomOf="@id/btn_select_photo">-->
-
-<!--        &lt;!&ndash; 标题栏 &ndash;&gt;-->
-<!--        <LinearLayout-->
-<!--            android:layout_width="match_parent"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:orientation="horizontal"-->
-<!--            android:gravity="center_vertical"-->
-<!--            android:layout_marginBottom="@dimen/spacing_medium">-->
-
-<!--            <TextView-->
-<!--                android:id="@+id/tv_recent_title"-->
-<!--                android:layout_width="0dp"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                android:layout_weight="1"-->
-<!--                android:text="@string/recent_edits"-->
-<!--                android:textColor="@color/text_primary"-->
-<!--                android:textSize="@dimen/text_body"-->
-<!--                android:textStyle="bold" />-->
-
-<!--            <TextView-->
-<!--                android:id="@+id/tv_see_all"-->
-<!--                android:layout_width="wrap_content"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                android:text="查看全部"-->
-<!--                android:textColor="@color/primary_blue"-->
-<!--                android:textSize="@dimen/text_small"-->
-<!--                android:visibility="gone"-->
-<!--                android:paddingVertical="@dimen/spacing_small"-->
-<!--                android:paddingHorizontal="@dimen/spacing_medium" />-->
-
-<!--        </LinearLayout>-->
-
-<!--        &lt;!&ndash; 最近编辑列表 &ndash;&gt;-->
-<!--        <androidx.recyclerview.widget.RecyclerView-->
-<!--            android:id="@+id/rv_recent_edits"-->
-<!--            android:layout_width="match_parent"-->
-<!--            android:layout_height="@dimen/recent_item_size"-->
-<!--            android:paddingStart="@dimen/spacing_small"-->
-<!--            android:paddingEnd="@dimen/spacing_small"-->
-<!--            android:clipToPadding="false"-->
-<!--            android:overScrollMode="never"-->
-<!--            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />-->
-
-<!--        &lt;!&ndash; 空状态提示 &ndash;&gt;-->
-<!--        <LinearLayout-->
-<!--            android:id="@+id/empty_state_container"-->
-<!--            android:layout_width="match_parent"-->
-<!--            android:layout_height="@dimen/recent_item_size"-->
-<!--            android:gravity="center"-->
-<!--            android:orientation="vertical"-->
-<!--            android:visibility="gone"-->
-<!--            android:background="@drawable/bg_empty_state">-->
-
-<!--            <ImageView-->
-<!--                android:layout_width="@dimen/empty_state_icon_size"-->
-<!--                android:layout_height="@dimen/empty_state_icon_size"-->
-<!--                android:src="@drawable/ic_photo"-->
-<!--                android:layout_marginBottom="@dimen/spacing_medium"-->
-<!--                android:contentDescription="@string/no_recent_edits"-->
-<!--                app:tint="@color/text_secondary" />-->
-
-<!--            <TextView-->
-<!--                android:id="@+id/tv_empty_state"-->
-<!--                android:layout_width="wrap_content"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                android:text="@string/no_recent_edits"-->
-<!--                android:textColor="@color/text_secondary"-->
-<!--                android:textSize="@dimen/text_caption"-->
-<!--                android:layout_marginBottom="@dimen/spacing_small" />-->
-
-<!--        </LinearLayout>-->
-
-<!--    </LinearLayout>-->
-
-<!--    &lt;!&ndash; 底部版本信息 &ndash;&gt;-->
-<!--    <TextView-->
-<!--        android:id="@+id/tv_version"-->
-<!--        android:layout_width="wrap_content"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:text="v1.0.0"-->
-<!--        android:textColor="@color/text_secondary"-->
-<!--        android:textSize="@dimen/text_small"-->
-<!--        android:layout_marginBottom="@dimen/spacing_medium"-->
-<!--        app:layout_constraintBottom_toBottomOf="parent"-->
-<!--        app:layout_constraintEnd_toEndOf="parent"-->
-<!--        app:layout_constraintStart_toStartOf="parent" />-->
+    </ScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
