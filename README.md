@@ -49,18 +49,30 @@ cd mini-photo-editor
 
 ## 4️⃣ 运行截图
 
-
+### 主页
 <div style="text-align: center;">
  <img src="./README_PHOTO/image1.png" alt="主页展示" width="300">
 </div>
+
+### 相册页展示
 <div style="text-align: center;">
  <img src="./README_PHOTO/image2.png" alt="相册页展示" width="300">
+</div>
+
+ ### 编辑页展示
  <div style="text-align: center;">
  <img src="./README_PHOTO/image3.png" alt="编辑页展示" width="300">
+</div>
+
+ ### 裁剪框展示
  <div style="text-align: center;">
  <img src="./README_PHOTO/image4.png" alt="裁剪框展示" width="300">
+</div>
+
+ ### 导出页展示
  <div style="text-align: center;">
  <img src="./README_PHOTO/image5.png" alt="导出页展示" width="300">
+</div>
 
 
 
