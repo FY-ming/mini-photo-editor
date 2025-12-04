@@ -15,13 +15,12 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.Toast
-import androidx.core.content.ContentProviderCompat.requireContext
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.DialogFragment
 import com.example.mini_photo_editor.R
 import com.google.android.material.appbar.MaterialToolbar
 import kotlinx.coroutines.*
-import java.io.File
-import java.io.OutputStream
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.coroutines.CoroutineContext
@@ -68,8 +67,16 @@ class ExportFragment : DialogFragment(), CoroutineScope {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 设置返回按钮
+        // 适配刘海 / 状态栏安全触控区域
         val toolbar = view.findViewById<MaterialToolbar>(R.id.toolbar)
+        toolbar.fitsSystemWindows = true
+        ViewCompat.setOnApplyWindowInsetsListener(toolbar) { v, insets ->
+            val topBar = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top
+            v.setPadding(0, topBar, 0, 0)
+            insets
+        }
+
+        // 设置返回按钮
         toolbar.setNavigationOnClickListener {
             dismiss()
         }

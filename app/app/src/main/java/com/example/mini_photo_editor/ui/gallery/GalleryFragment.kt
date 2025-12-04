@@ -10,6 +10,8 @@ import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
@@ -46,6 +48,15 @@ class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        // ✅ 适配刘海 / 状态栏安全触控区域
+        val toolbar = view.findViewById<MaterialToolbar>(R.id.toolbar)
+        toolbar.fitsSystemWindows = true
+        ViewCompat.setOnApplyWindowInsetsListener(toolbar) { v, insets ->
+            val topBar = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top
+            v.setPadding(0, topBar, 0, 0)
+            insets
+        }
 
         // 初始化视图
         initViews(view)

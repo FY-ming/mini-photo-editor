@@ -7,11 +7,12 @@ import android.opengl.GLSurfaceView
 import android.os.Bundle
 import android.view.MotionEvent
 import android.view.View
-import android.widget.Button
+import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.DialogFragment
 import com.example.mini_photo_editor.R
-import com.google.android.material.appbar.MaterialToolbar
 import androidx.core.net.toUri
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.mini_photo_editor.ui.editor.opengl.GLRenderer
 import com.example.mini_photo_editor.ui.export.ExportFragment
@@ -35,34 +36,120 @@ class EditorFragment : DialogFragment(R.layout.fragment_editor) {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setStyle(STYLE_NORMAL, R.style.FullScreenDialog)
+
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 设置返回按钮
-        val toolbar = view.findViewById<MaterialToolbar>(R.id.toolbar)
-        toolbar.setNavigationOnClickListener {
-            dismiss()
+        // 适配刘海/状态栏，确保编辑页顶部工具栏按钮可点
+        val toolbar = view.findViewById<Toolbar>(R.id.toolbar)
+        toolbar.fitsSystemWindows = true
+        ViewCompat.setOnApplyWindowInsetsListener(toolbar) { v, insets ->
+            val top = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top
+            v.setPadding(0, top, 0, 0)
+            insets
         }
+
+        // 设置顶部工具栏按钮
+        setupTopToolbar(view)
+
+        // 设置底部工具按钮
+        setupBottomTools(view)
 
         // 初始化 OpenGL
         initOpenGL(view)
-
         loadAndDisplayImage()
 
-        // 设置重置按钮
-        view.findViewById<Button>(R.id.btn_reset).setOnClickListener {
+        // 添加触摸监听
+        setupTouchListener()
+    }
+    private fun setupTopToolbar(view: View) {
+        // 给容器设置点击事件
+        view.findViewById<View>(R.id.btn_back_container).setOnClickListener {
+            println("← 点击返回按钮")
+            dismiss()
+        }
+
+        view.findViewById<View>(R.id.btn_save_container).setOnClickListener {
+            println("💾 点击保存按钮")
+            exportCurrentImage()
+        }
+    }
+
+    private fun setupBottomTools(view: View) {
+        // 裁剪按钮
+        view.findViewById<View>(R.id.btn_crop).setOnClickListener {
+            showCropTool()
+        }
+
+        // 滤镜按钮
+        view.findViewById<View>(R.id.btn_filter).setOnClickListener {
+            showFilterTool()
+        }
+
+        // 文字按钮
+        view.findViewById<View>(R.id.btn_text).setOnClickListener {
+            showTextTool()
+        }
+
+        // 贴纸按钮
+        view.findViewById<View>(R.id.btn_sticker).setOnClickListener {
+            showStickerTool()
+        }
+
+        // 涂鸦按钮
+        view.findViewById<View>(R.id.btn_draw).setOnClickListener {
+            showDrawTool()
+        }
+
+        // 重置按钮（原来已定义，保持不变）
+        view.findViewById<View>(R.id.btn_reset).setOnClickListener {
             println("🔄 用户点击重置按钮")
             glRenderer.resetTransform()
             glSurfaceView.requestRender()
         }
-        view.findViewById<Button>(R.id.btn_export).setOnClickListener {
-            println("📤 用户点击导出按钮")
-            exportCurrentImage()
-        }
-        // 添加触摸监听
-        setupTouchListener()
+    }
+    // 以下是各个工具的功能实现（占位符）
+
+    private fun showCropTool() {
+        println("✂️ 显示裁剪工具")
+        // TODO: 实现裁剪功能
+        // 1. 显示裁剪界面
+        // 2. 添加裁剪框
+        // 3. 处理裁剪逻辑
+    }
+
+    private fun showFilterTool() {
+        println("🎨 显示滤镜工具")
+        // TODO: 实现滤镜功能
+        // 1. 显示滤镜列表
+        // 2. 应用滤镜效果
+        // 3. 实时预览
+    }
+
+    private fun showTextTool() {
+        println("T 显示文字工具")
+        // TODO: 实现文字功能
+        // 1. 显示文字输入框
+        // 2. 字体、颜色、大小选择
+        // 3. 文字位置调整
+    }
+
+    private fun showStickerTool() {
+        println("😊 显示贴纸工具")
+        // TODO: 实现贴纸功能
+        // 1. 显示贴纸库
+        // 2. 贴纸拖拽、缩放
+        // 3. 贴纸图层管理
+    }
+
+    private fun showDrawTool() {
+        println("🖌️ 显示涂鸦工具")
+        // TODO: 实现涂鸦功能
+        // 1. 画笔选择（粗细、颜色）
+        // 2. 画布绘制
+        // 3. 撤销/重做
     }
     @SuppressLint("ClickableViewAccessibility")
     private fun setupTouchListener() {
