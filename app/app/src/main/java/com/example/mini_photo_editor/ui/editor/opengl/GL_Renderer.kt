@@ -261,6 +261,63 @@ class GLRenderer : GLSurfaceView.Renderer {
         GLES30.glDisableVertexAttribArray(1)
     }
 
+    /**
+     * 在 GL 线程上替换 bitmap：删除旧纹理（如果有），设置新的 bitmap，纹理将在下次 onDrawFrame 上传。
+     * MUST be called from GL thread (use glSurfaceView.queueEvent { ... } 来调用)
+     */
+    fun replaceBitmapOnGLThread(newBitmap: Bitmap) {
+        // 删除旧纹理（如果存在）
+        if (textureId != 0) {
+            val ids = IntArray(1)
+            ids[0] = textureId
+            GLES30.glDeleteTextures(1, ids, 0)
+            textureId = 0
+            println("🗑️ 已删除旧纹理")
+        }
+        // 设置新的 bitmap，下一次 onDrawFrame 会检测 textureId == 0 然后 loadTexture
+        bitmap = newBitmap
+        println("🔁 GLRenderer 接收新 bitmap（将在 GL 线程上传）：${newBitmap.width}x${newBitmap.height}")
+    }
+
+    /**
+     * 将 View 坐标（像素）映射到 bitmap 像素坐标。
+     * 逻辑：
+     * - 把 view 点转到 NDC（[-1,1]）
+     * - 反向应用 translate & scale（即 (ndc - translate)/scale）
+     * - 转回纹理坐标 u,v，然后转成 bitmap 像素
+     *
+     * 注意：需要在主线程调用此函数（读取 scale/translate 都是线程安全的基本读取）
+     */
+    fun viewPointToBitmapPixel(xView: Float, yView: Float, viewWidth: Int, viewHeight: Int): Pair<Int, Int>? {
+        val bmp = bitmap ?: return null
+        if (viewWidth == 0 || viewHeight == 0) return null
+
+        // 1) view -> NDC
+        // x in [0,viewWidth] -> ndcX in [-1, 1]
+        val ndcX = (xView / viewWidth) * 2f - 1f
+        // y: Android view top=0, bottom=viewHeight; NDC y up positive: convert
+        val ndcY = 1f - (yView / viewHeight) * 2f  // now ndcY in [-1,1], +up
+
+        // 2) 反向应用 transform: ndc' = (ndc - translate) / scale
+        // 注意：translateX/translateY 是 renderer 的变换量（你在 translate(dx,dy) 时使用的值）
+        val invScale = 1f / scale
+        val ndcXprime = (ndcX - translateX) * invScale
+        val ndcYprime = (ndcY - translateY) * invScale
+
+        // 3) ndc' -> texture UV (u,v)
+        // On your quad vertex mapping, x NDC -1 -> u=0, x NDC +1 -> u=1
+        val u = (ndcXprime + 1f) * 0.5f
+        // For v: we used texture coordinates where top=0, bottom=1 in shader code; mapping: v = (1 - ndcY')/2
+        val v = (1f - ndcYprime) * 0.5f
+
+        // 4) uv -> bitmap pixels
+        val px = (u * bmp.width).toInt().coerceIn(0, bmp.width - 1)
+        val py = (v * bmp.height).toInt().coerceIn(0, bmp.height - 1)
+
+        return Pair(px, py)
+    }
+
+
     // 添加缩放和平移方法
     fun scale(factor: Float) {
         scale *= factor

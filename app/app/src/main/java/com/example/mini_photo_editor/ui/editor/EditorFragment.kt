@@ -20,6 +20,7 @@ import androidx.navigation.fragment.findNavController
 import com.example.mini_photo_editor.ui.export.ExportFragment
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 import java.net.URL
@@ -91,19 +92,52 @@ class EditorFragment : DialogFragment(R.layout.fragment_editor) {
     }
 
     private fun setCropRectFromView(viewLeft: Float, viewTop: Float, viewRight: Float, viewBottom: Float) {
-        // 把 View 坐标转换为 Bitmap 像素坐标
-        val bitmap = currentBitmap ?: return
+        val bitmap = currentBitmap ?: run {
+            println("⚠️ setCropRectFromView: currentBitmap 为 null")
+            return
+        }
 
-        // GLSurfaceView 的显示区域尺寸（View 尺寸）
+        // 尝试使用 renderer 的精确映射（考虑 scale/translate）
+        try {
+            // 四个角点在 view 坐标转换为 bitmap 像素
+            val p1 = glRenderer.viewPointToBitmapPixel(viewLeft, viewTop, glSurfaceView.width, glSurfaceView.height)
+            val p2 = glRenderer.viewPointToBitmapPixel(viewRight, viewTop, glSurfaceView.width, glSurfaceView.height)
+            val p3 = glRenderer.viewPointToBitmapPixel(viewLeft, viewBottom, glSurfaceView.width, glSurfaceView.height)
+            val p4 = glRenderer.viewPointToBitmapPixel(viewRight, viewBottom, glSurfaceView.width, glSurfaceView.height)
+
+            if (p1 != null && p2 != null && p3 != null && p4 != null) {
+                val xs = listOf(p1.first, p2.first, p3.first, p4.first)
+                val ys = listOf(p1.second, p2.second, p3.second, p4.second)
+
+                val left = xs.minOrNull() ?: 0
+                val right = xs.maxOrNull() ?: bitmap.width
+                val top = ys.minOrNull() ?: 0
+                val bottom = ys.maxOrNull() ?: bitmap.height
+
+                // 确保在边界内
+                val l = left.coerceIn(0, bitmap.width - 1)
+                val t = top.coerceIn(0, bitmap.height - 1)
+                val r = right.coerceIn(l + 1, bitmap.width)
+                val b = bottom.coerceIn(t + 1, bitmap.height)
+
+                cropRect = Rect(l, t, r, b)
+                println("➡️ （精确）转换后的裁剪像素坐标: $cropRect")
+                return
+            } else {
+                println("⚠️ renderer 映射失败，退回线性映射")
+            }
+        } catch (e: Exception) {
+            println("⚠️ renderer 映射异常: ${e.message}, 退回比例映射")
+        }
+
+        // 退回：简单按比例映射（兼容性备用）
         val viewWidth = glSurfaceView.width.toFloat()
         val viewHeight = glSurfaceView.height.toFloat()
-
         if (viewWidth <= 0 || viewHeight <= 0) {
             println("⚠️ GLSurfaceView 尺寸为 0，无法转换")
             return
         }
 
-        // 映射比例（bitmap -> view）
         val scaleX = bitmap.width.toFloat() / viewWidth
         val scaleY = bitmap.height.toFloat() / viewHeight
 
@@ -112,14 +146,13 @@ class EditorFragment : DialogFragment(R.layout.fragment_editor) {
         val realRight = (viewRight * scaleX).toInt().coerceIn(1, bitmap.width)
         val realBottom = (viewBottom * scaleY).toInt().coerceIn(1, bitmap.height)
 
-        // 修正边界
         val left = min(realLeft, realRight - 1)
         val top = min(realTop, realBottom - 1)
         val right = max(realRight, left + 1)
         val bottom = max(realBottom, top + 1)
 
         cropRect = Rect(left, top, right, bottom)
-        println("➡️ 转换后的裁剪像素坐标: $cropRect")
+        println("➡️ （退回）转换后的裁剪像素坐标: $cropRect")
     }
 
     private fun setupTopToolbar(view: View) {
@@ -171,23 +204,61 @@ class EditorFragment : DialogFragment(R.layout.fragment_editor) {
     }
 
     // 以下是各个工具的功能实现/占位符
-
     private fun applyCrop() {
-        // 裁剪
         val sourceBitmap = currentBitmap ?: return
-        val rect = cropRect ?: return
+        val rect = cropRect ?: run {
+            println("⚠️ applyCrop: 未设置 cropRect")
+            return
+        }
 
-        // 执行裁剪
-        val croppedBitmap = BitmapCropper.crop(sourceBitmap, rect)
+        // 在后台线程做 Bitmap.createBitmap（可能会占用时间）
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
+            try {
+                val croppedBitmap = BitmapCropper.crop(sourceBitmap, rect)
+                println("✂️ 裁剪完成（后台线程）: ${croppedBitmap.width}x${croppedBitmap.height}")
 
-        // 更新当前bitmap
-        currentBitmap = croppedBitmap
+                // 更新 currentBitmap（主线程）
+                withContext(Dispatchers.Main) {
+                    // 可安全回收旧 bitmap（如果需要）
+                    // sourceBitmap.recycle() // 仅在你确定不会再使用原图时回收
+                    currentBitmap = croppedBitmap
+                }
 
-        // 重新传入OpenGL进行预览
-        glSurfaceView.queueEvent {
-            glRenderer.setBitmap(croppedBitmap)
+                // 在 GL 线程替换纹理并触发渲染
+                glSurfaceView.queueEvent {
+                    try {
+                        glRenderer.replaceBitmapOnGLThread(croppedBitmap)
+                    } catch (e: Exception) {
+                        println("❌ GL 替换纹理失败: ${e.message}")
+                    }
+                }
+
+                // 请求主线程渲染（确保 UI 刷新）
+                withContext(Dispatchers.Main) {
+                    glSurfaceView.requestRender()
+                }
+            } catch (e: Exception) {
+                println("❌ 裁剪异常: ${e.message}")
+            }
         }
     }
+
+//    private fun applyCrop() {
+//        // 裁剪
+//        val sourceBitmap = currentBitmap ?: return
+//        val rect = cropRect ?: return
+//
+//        // 执行裁剪
+//        val croppedBitmap = BitmapCropper.crop(sourceBitmap, rect)
+//
+//        // 更新当前bitmap
+//        currentBitmap = croppedBitmap
+//
+//        // 重新传入OpenGL进行预览
+//        glSurfaceView.queueEvent {
+//            glRenderer.setBitmap(croppedBitmap)
+//        }
+//    }
 
     private fun showFilterTool() {
         println("🎨 显示滤镜工具")
