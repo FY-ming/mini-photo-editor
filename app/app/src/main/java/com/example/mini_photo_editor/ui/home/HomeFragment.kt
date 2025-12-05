@@ -25,9 +25,13 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
 
     // 为每个include的布局创建绑定
     // 轮播页
+    // FragmentHomeBinding 用于绑定 fragment_home.xml
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
+    // 轮播图适配器
     private lateinit var bannerAdapter: BannerAdapter
+
+    // include 布局对应的 ViewBinding
     // 主工具栏
     private lateinit var mainToolsBinding: LayoutMainToolsBinding
     // 快速功能
@@ -43,18 +47,28 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 绑定include的布局
+        // 绑定根布局
         _binding = FragmentHomeBinding.bind(view)
+        // 绑定include页面的布局
         mainToolsBinding = LayoutMainToolsBinding.bind(binding.mainTools.root)
         quickToolsBinding = LayoutQuickToolsBinding.bind(binding.quickTools.root)
         recentEditsBinding = LayoutRecentEditsBinding.bind(binding.recentEdits.root)
 
+        // 初始化轮播图
         setupBanner()
 
-
+        // 设置按钮点击事件
         setupClickListeners()
     }
 
+    /**
+     * 初始化首页轮播图
+     * - 设置适配器
+     * - 添加页面切换监听
+     * - 加载轮播数据
+     * - 初始化指示器圆点
+     * - 启动自动轮播
+     */
     private fun setupBanner() {
         // 创建适配器
         bannerAdapter = BannerAdapter()
@@ -63,8 +77,9 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         val viewPager = requireView().findViewById<ViewPager2>(R.id.viewPager)
 
         viewPager.adapter = bannerAdapter
-        viewPager.offscreenPageLimit = 3
+        viewPager.offscreenPageLimit = 3 // 提前缓存 3 页
 
+        // 监听页面切换，更新指示器
         viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)
@@ -73,12 +88,11 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
             }
         })
 
-        // 加载数据
+        // 加载轮播数据
         val bannerItems = BannerItem.createTutorialItems()
         bannerAdapter.submitList(bannerItems)
 
-
-        // 设置指示器
+        // 创建指示器圆点
         setupIndicators(bannerItems.size)
 
         // 设置点击事件
@@ -100,11 +114,14 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         startAutoScroll()
     }
 
-
+    /**
+     * 创建轮播图底部的圆点指示器
+     */
     private fun setupIndicators(count: Int) {
         val indicatorContainer = binding.banner.indicatorContainer
         indicatorContainer.removeAllViews()
 
+        // 圆点布局参数
         val layoutParams = LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
@@ -112,6 +129,7 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
             setMargins(8, 0, 8, 0)
         }
 
+        // 依次创建圆点
         for (i in 0 until count) {
             val imageView = ImageView(requireContext()).apply {
                 setImageDrawable(
@@ -126,6 +144,9 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         }
     }
 
+    /**
+     * 切换轮播图时更新指示器
+     */
     private fun updateIndicators() {
         val childCount = binding.banner.indicatorContainer.childCount
         for (i in 0 until childCount) {
@@ -140,8 +161,12 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
         }
     }
 
+    /**
+     * 启动轮播图自动滚动
+     */
     private fun startAutoScroll() {
         bannerTimer = Timer()
+        // 4s切换一次，初始化时延时4s后切换，避免一进入页面就切换轮播图，影响观感
         bannerTimer?.scheduleAtFixedRate(4000, 4000) {
             requireActivity().runOnUiThread {
                 val nextPosition = (currentBannerPosition + 1) % bannerAdapter.itemCount
@@ -151,15 +176,22 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
     }
 
 
+    /**
+     * 设置主功能区和快捷功能区的按钮点击事件
+     */
     private fun setupClickListeners() {
+        // 主工具栏
+        // 从相册导入照片
         mainToolsBinding.btnImportPhoto.setOnClickListener {
             navigateToGallery()
         }
 
+        // 相机
         mainToolsBinding.btnCamera.setOnClickListener {
             Toast.makeText(requireContext(), "相机功能开发中", Toast.LENGTH_SHORT).show()
         }
 
+        // 拼图
         mainToolsBinding.btnCollage.setOnClickListener {
             Toast.makeText(requireContext(), "拼图功能开发中", Toast.LENGTH_SHORT).show()
         }
@@ -181,12 +213,15 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
             Toast.makeText(requireContext(), "魔法消除功能开发中", Toast.LENGTH_SHORT).show()
         }
 
-        // 查看全部
+        // 最近编辑 → 查看全部
         recentEditsBinding.tvSeeAll.setOnClickListener {
             Toast.makeText(requireContext(), "查看全部功能开发中", Toast.LENGTH_SHORT).show()
         }
     }
 
+    /**
+     * 打开相册（GalleryFragment 以 DialogFragment 方式显示）
+     */
     private fun navigateToGallery() {
         val galleryFragment = GalleryFragment()
         galleryFragment.show(parentFragmentManager, "gallery_dialog")

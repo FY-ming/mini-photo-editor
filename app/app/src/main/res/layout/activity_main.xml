@@ -5,7 +5,17 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- 页面内容区域 -->
+
+    <!--
+        NavHostFragment：导航容器
+
+        - 用来包含不同的 Fragment。
+        - 对应的导航图为 nav_graph.xml。
+        - 当点击底部导航栏(BottomNavigationView)时，NavController 会调用这里包含的 Fragment。
+
+          app:defaultNavHost="true"：把这个 NavHostFragment 设为当前 Activity 默认的导航宿主
+          app:navGraph="@navigation/nav_graph"：指定使用的导航图（nav_graph）
+    -->
     <fragment
         android:id="@+id/nav_host_fragment"
         android:name="androidx.navigation.fragment.NavHostFragment"
@@ -14,7 +24,14 @@
         app:defaultNavHost="true"
         app:navGraph="@navigation/nav_graph" />
 
-    <!-- 底部导航栏 -->
+    <!--
+        BottomNavigationView：底部导航栏
+
+        - 显示 Home / Settings 等底部菜单项。
+        - 通过 MainActivity.kt 中 setupNavigation() 绑定导航控制器，
+          实现点击菜单自动切换 Fragment。
+        - 使用 @menu/bottom_nav_menu 作为菜单项来源。
+    -->
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottom_navigation"
         android:layout_width="match_parent"

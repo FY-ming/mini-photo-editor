@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 整个应用的主导航图（Navigation Graph） ，用于存放应用的基本界面-->
+<!-- app:startDestination="@id/homeFragment"：启动目的地：应用打开后默认进入哪个 Fragment -->
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
     app:startDestination="@id/homeFragment">
 
-    <!-- 首页 -->
+    <!-- 首页（对应 BottomNavigationView 的 homeFragment 菜单） -->
     <fragment
         android:id="@+id/homeFragment"
         android:name="com.example.mini_photo_editor.ui.home.HomeFragment"
@@ -13,26 +15,6 @@
         tools:layout="@layout/fragment_home">
 
     </fragment>
-
-    <!-- 编辑器页 -->
-    <fragment
-        android:id="@+id/editorFragment"
-        android:name="com.example.mini_photo_editor.ui.editor.EditorFragment"
-        android:label="编辑"
-        tools:layout="@layout/fragment_editor">
-
-        <!-- 定义参数 -->
-        <argument
-            android:name="imageUri"
-            android:defaultValue=""
-            app:argType="string" />
-    </fragment>
-
-    <fragment
-        android:id="@+id/exportFragment"
-        android:name="com.example.mini_photo_editor.ui.export.ExportFragment"
-        android:label="导出图片"
-        tools:layout="@layout/fragment_export"/>
 
     <!-- 其他功能页 -->
     <fragment

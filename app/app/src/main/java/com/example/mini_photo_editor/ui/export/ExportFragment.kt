@@ -25,23 +25,40 @@ import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.coroutines.CoroutineContext
 
+/**
+ * 导出图片全屏 DialogFragment
+ * - 显示当前编辑的图片预览
+ * - 支持保存到系统相册
+ */
 class ExportFragment : DialogFragment(), CoroutineScope {
 
-    // Coroutine scope管理
+    // -----------------------------
+    // CoroutineScope 管理
+    // -----------------------------
     private val job = SupervisorJob()
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.Main + job
 
+    // -----------------------------
+    // 视图控件
+    // -----------------------------
     private lateinit var imageView: ImageView
     private lateinit var progressBar: ProgressBar
     private lateinit var btnExport: Button
 
+    // -----------------------------
+    // 当前 Bitmap
+    // -----------------------------
     private var bitmapPath: String? = null
     private var currentBitmap: Bitmap? = null
 
     companion object {
         private const val ARG_BITMAP_PATH = "bitmap_path"
 
+        /**
+         * 创建 ExportFragment 实例
+         * @param bitmapPath 图片文件路径
+         */
         fun newInstance(bitmapPath: String): ExportFragment {
             return ExportFragment().apply {
                 arguments = Bundle().apply {
@@ -53,6 +70,7 @@ class ExportFragment : DialogFragment(), CoroutineScope {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // 设置全屏 Dialog 样式
         setStyle(STYLE_NORMAL, R.style.FullScreenDialog)
     }
 
@@ -67,7 +85,10 @@ class ExportFragment : DialogFragment(), CoroutineScope {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 适配刘海 / 状态栏安全触控区域
+
+        // -----------------------------
+        // 顶部工具栏适配刘海/状态栏
+        // -----------------------------
         val toolbar = view.findViewById<MaterialToolbar>(R.id.toolbar)
         toolbar.fitsSystemWindows = true
         ViewCompat.setOnApplyWindowInsetsListener(toolbar) { v, insets ->
@@ -100,6 +121,10 @@ class ExportFragment : DialogFragment(), CoroutineScope {
         loadPreview()
     }
 
+
+    /**
+     * 加载图片预览
+     */
     private fun loadPreview() {
         bitmapPath = arguments?.getString(ARG_BITMAP_PATH)
         launch(Dispatchers.IO) {
@@ -113,6 +138,9 @@ class ExportFragment : DialogFragment(), CoroutineScope {
         }
     }
 
+    /**
+     * 导出图片到相册
+     */
     private fun exportImage() {
         val bitmap = currentBitmap ?: return
 
@@ -130,6 +158,10 @@ class ExportFragment : DialogFragment(), CoroutineScope {
         }
     }
 
+    /**
+     * 保存 Bitmap 到系统相册
+     * @return 返回图片 Uri
+     */
     private fun saveBitmapToGallery(bitmap: Bitmap) : Uri? {
         val resolver = requireContext().contentResolver
         val contentValues = ContentValues().apply {
@@ -141,6 +173,7 @@ class ExportFragment : DialogFragment(), CoroutineScope {
             }
         }
 
+        // 插入 MediaStore
         val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
         uri?.let {
             resolver.openOutputStream(it)?.use { fos ->
@@ -158,7 +191,9 @@ class ExportFragment : DialogFragment(), CoroutineScope {
 
     override fun onDestroy() {
         super.onDestroy()
+        // 取消协程
         job.cancel()
+        // 回收 Bitmap
         currentBitmap?.recycle()
         currentBitmap = null
     }

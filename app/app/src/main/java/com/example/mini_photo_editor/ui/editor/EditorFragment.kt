@@ -28,31 +28,42 @@ import kotlin.math.sqrt
 import kotlin.math.min
 import kotlin.math.max
 
+/**
+ * 编辑器全屏 DialogFragment
+ * - 使用 GLSurfaceView + GLRenderer 实现照片预览与操作
+ * - 支持裁剪、平移、缩放、重置等功能
+ */
 class EditorFragment : DialogFragment(R.layout.fragment_editor) {
-    // GL画布
+
+    // -----------------------------
+    // OpenGL 渲染相关
+    // -----------------------------
     private lateinit var glSurfaceView: GLSurfaceView
     private lateinit var glRenderer: GLRenderer
     private var currentBitmap: Bitmap? = null
-    // 裁剪框
+
+    // -----------------------------
+    // 裁剪框相关
+    // -----------------------------
     private lateinit var cropOverlay: CropOverlayView
     private var lastTouchX = 0f
     private var lastTouchY = 0f
     private var isScaling = false
     private var startDistance = 0f
-
-    // 当前裁剪框区域（像素坐标）
-    private var cropRect: Rect? = null
+    private var cropRect: Rect? = null     // 当前裁剪框区域（像素坐标）
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setStyle(STYLE_NORMAL, R.style.FullScreenDialog)
+        setStyle(STYLE_NORMAL, R.style.FullScreenDialog)         // 设置全屏 Dialog 样式
 
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 适配刘海/状态栏，确保编辑页顶部工具栏按钮可点
+        // -----------------------------
+        // 顶部工具栏适配刘海/状态栏
+        // -----------------------------
         val toolbar = view.findViewById<Toolbar>(R.id.toolbar)
         toolbar.fitsSystemWindows = true
         ViewCompat.setOnApplyWindowInsetsListener(toolbar) { v, insets ->
@@ -68,6 +79,7 @@ class EditorFragment : DialogFragment(R.layout.fragment_editor) {
 
         // 初始化 OpenGL
         initOpenGL(view)
+        // 加载传入的图片
         loadAndDisplayImage()
 
         // 初始化裁剪框，设置监听
@@ -80,24 +92,30 @@ class EditorFragment : DialogFragment(R.layout.fragment_editor) {
             // 执行裁剪并更新预览
             applyCrop()
 
-            // 隐藏 overlay
+            // 隐藏裁剪 overlay
             cropOverlay.hide()
         }
 
         cropOverlay.setOnCropCancelListener {
             cropOverlay.hide()
         }
-        // 添加触摸监听
+
+        // -----------------------------
+        // 添加触摸事件监听器（平移 + 缩放）
+        // -----------------------------
         setupTouchListener()
     }
 
+    /**
+     * 将裁剪框 View 坐标转换为 Bitmap 像素坐标
+     */
     private fun setCropRectFromView(viewLeft: Float, viewTop: Float, viewRight: Float, viewBottom: Float) {
         val bitmap = currentBitmap ?: run {
             println("⚠️ setCropRectFromView: currentBitmap 为 null")
             return
         }
 
-        // 尝试使用 renderer 的精确映射（考虑 scale/translate）
+        // 尝试使用 GLRenderer 精确映射
         try {
             // 四个角点在 view 坐标转换为 bitmap 像素
             val p1 = glRenderer.viewPointToBitmapPixel(viewLeft, viewTop, glSurfaceView.width, glSurfaceView.height)
@@ -130,7 +148,7 @@ class EditorFragment : DialogFragment(R.layout.fragment_editor) {
             println("⚠️ renderer 映射异常: ${e.message}, 退回比例映射")
         }
 
-        // 退回：简单按比例映射（兼容性备用）
+        // 若精准映射失败->退回：简单按比例映射（兼容性备用）
         val viewWidth = glSurfaceView.width.toFloat()
         val viewHeight = glSurfaceView.height.toFloat()
         if (viewWidth <= 0 || viewHeight <= 0) {
@@ -155,6 +173,9 @@ class EditorFragment : DialogFragment(R.layout.fragment_editor) {
         println("➡️ （退回）转换后的裁剪像素坐标: $cropRect")
     }
 
+    /**
+     * 设置顶部工具栏按钮事件
+     */
     private fun setupTopToolbar(view: View) {
         // 给容器设置点击事件
         view.findViewById<View>(R.id.btn_back_container).setOnClickListener {
@@ -168,6 +189,9 @@ class EditorFragment : DialogFragment(R.layout.fragment_editor) {
         }
     }
 
+    /**
+     * 设置底部工具按钮事件
+     */
     private fun setupBottomTools(view: View) {
         // 裁剪按钮
         view.findViewById<View>(R.id.btn_crop).setOnClickListener {
@@ -204,6 +228,9 @@ class EditorFragment : DialogFragment(R.layout.fragment_editor) {
     }
 
     // 以下是各个工具的功能实现/占位符
+    /**
+     * 执行裁剪操作
+     */
     private fun applyCrop() {
         val sourceBitmap = currentBitmap ?: return
         val rect = cropRect ?: run {
@@ -243,23 +270,9 @@ class EditorFragment : DialogFragment(R.layout.fragment_editor) {
         }
     }
 
-//    private fun applyCrop() {
-//        // 裁剪
-//        val sourceBitmap = currentBitmap ?: return
-//        val rect = cropRect ?: return
-//
-//        // 执行裁剪
-//        val croppedBitmap = BitmapCropper.crop(sourceBitmap, rect)
-//
-//        // 更新当前bitmap
-//        currentBitmap = croppedBitmap
-//
-//        // 重新传入OpenGL进行预览
-//        glSurfaceView.queueEvent {
-//            glRenderer.setBitmap(croppedBitmap)
-//        }
-//    }
-
+    // -----------------------------
+    // 占位工具函数（滤镜、文字、贴纸、涂鸦）
+    // -----------------------------
     private fun showFilterTool() {
         println("🎨 显示滤镜工具")
         // TODO: 实现滤镜功能
@@ -291,6 +304,10 @@ class EditorFragment : DialogFragment(R.layout.fragment_editor) {
         // 2. 画布绘制
         // 3. 撤销/重做
     }
+
+    /**
+     * 设置触摸事件（单指平移 + 双指缩放）
+     */
     @SuppressLint("ClickableViewAccessibility")
     private fun setupTouchListener() {
         glSurfaceView.setOnTouchListener { v, event ->
@@ -361,6 +378,9 @@ class EditorFragment : DialogFragment(R.layout.fragment_editor) {
         return sqrt(dx * dx + dy * dy)
     }
 
+    /**
+     * 初始化 OpenGL
+     */
     private fun initOpenGL(view: View) {
         println("🚀 初始化 OpenGL ES")
 
@@ -377,6 +397,9 @@ class EditorFragment : DialogFragment(R.layout.fragment_editor) {
         println("✅ OpenGL ES 初始化完成")
     }
 
+    /**
+     * 加载图片并显示
+     */
     private fun loadAndDisplayImage() {
         val imageUriString = arguments?.getString("imageUri")
         if (!imageUriString.isNullOrEmpty()) {
@@ -440,6 +463,9 @@ class EditorFragment : DialogFragment(R.layout.fragment_editor) {
         println("🗑️ 编辑器销毁，资源已清理")
     }
 
+    /**
+     * 导出当前 Bitmap 到临时文件，并弹出 ExportFragment
+     */
     private fun exportCurrentImage() {
         currentBitmap?.let { bitmap ->
             val tempFile = File(requireContext().cacheDir, "temp_crop_${System.currentTimeMillis()}.jpg")

@@ -1,15 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 底部导航栏的菜单文件，定义底部导航栏各个菜单项的图标和名称 -->
+
+    <!-- 首页菜单项 -->
     <item
         android:id="@+id/homeFragment"
         android:icon="@android:drawable/ic_menu_gallery"
         android:title="首页" />
 
+    <!-- 其他功能菜单项 -->
     <item
         android:id="@+id/otherFragment"
         android:icon="@android:drawable/ic_menu_manage"
         android:title="其他" />
 
+    <!-- 个人中心（我的）菜单项 -->
     <item
         android:id="@+id/profileFragment"
         android:icon="@android:drawable/ic_menu_my_calendar"

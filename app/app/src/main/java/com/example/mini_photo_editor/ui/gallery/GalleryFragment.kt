@@ -8,7 +8,6 @@ import android.os.Bundle
 import android.provider.MediaStore
 import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -29,6 +28,11 @@ class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: MediaAdapter
 
+    /**
+     * 系统权限请求回调：
+     * 用户同意 -> 加载相册的真实图片
+     * 用户拒绝 -> 使用测试图片
+     */
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
@@ -43,13 +47,16 @@ class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // 全屏 Dialog 样式：styles.xml 中定义的 FullScreenDialog
         setStyle(STYLE_NORMAL, R.style.FullScreenDialog)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // ✅ 适配刘海 / 状态栏安全触控区域
+        // -----------------------------
+        // 处理状态栏（刘海屏）安全区域
+        // -----------------------------
         val toolbar = view.findViewById<MaterialToolbar>(R.id.toolbar)
         toolbar.fitsSystemWindows = true
         ViewCompat.setOnApplyWindowInsetsListener(toolbar) { v, insets ->
@@ -58,24 +65,31 @@ class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
             insets
         }
 
-        // 初始化视图
+        // 初始化界面组件
         initViews(view)
         setupRecyclerView()
 
-        // 检查权限并加载数据
+        // 自动检查权限并加载媒体数据
         checkPermissionsAndLoadData()
     }
+
+    /**
+     * 初始化顶部栏和 RecyclerView
+     */
     private fun initViews(view: View) {
         // 设置返回按钮
         val toolbar = view.findViewById<MaterialToolbar>(R.id.toolbar)
         toolbar.setNavigationOnClickListener {
-            dismiss()
+            dismiss() // 关闭相册
         }
 
         // 获取 RecyclerView
         recyclerView = view.findViewById(R.id.rv_gallery)
     }
 
+    /**
+     * 设置 3 列网格相册 + 点击事件
+     */
     private fun setupRecyclerView() {
         adapter = MediaAdapter()
 
@@ -91,6 +105,9 @@ class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
         recyclerView.adapter = adapter
     }
 
+    /**
+     * 检查权限 → 加载相册数据
+     */
     private fun checkPermissionsAndLoadData() {
         println("🔐 checkPermissionsAndLoadData:检查存储权限")
 
@@ -102,6 +119,11 @@ class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
             requestAppropriatePermission()
         }
     }
+
+    /**
+     * Android 13+ 使用 READ_MEDIA_IMAGES
+     * Android 12- 使用 READ_EXTERNAL_STORAGE
+     */
     private fun requestAppropriatePermission() {
         val permissionToRequest = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             // Android 13+ 使用 READ_MEDIA_IMAGES
@@ -115,6 +137,9 @@ class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
         requestPermissionLauncher.launch(permissionToRequest)
     }
 
+    /**
+     * 检查是否已有存储读取权限
+     */
     private fun hasReadStoragePermission(): Boolean {
         val permissionToCheck = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             Manifest.permission.READ_MEDIA_IMAGES
@@ -128,6 +153,9 @@ class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
         ) == PackageManager.PERMISSION_GRANTED
     }
 
+    /**
+     * 用户拒绝权限 → 使用测试数据
+     */
     private fun loadTestDataAsFallback() {
         viewLifecycleOwner.lifecycleScope.launch {
             val testItems = MediaItem.createTestItems()
@@ -136,6 +164,9 @@ class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
         }
     }
 
+    /**
+     * 加载真实媒体库数据
+     */
     private fun loadMediaData() {
         viewLifecycleOwner.lifecycleScope.launch {
             println("🔄 loadMediaData:开始加载媒体数据...")
@@ -156,6 +187,9 @@ class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
         }
     }
 
+    /**
+     * 读取系统媒体库（IO线程）
+     */
     private suspend fun loadImagesFromMediaStore(): List<MediaItem> = withContext(Dispatchers.IO) {
         // 这里先简单实现，后续再处理权限
         val mediaItems = mutableListOf<MediaItem>()
@@ -205,6 +239,9 @@ class GalleryFragment : DialogFragment(R.layout.fragment_gallery) {
         return@withContext mediaItems
     }
 
+    /**
+     * 跳转到编辑器 EditorFragment（全屏 Dialog）
+     */
     private fun navigateToEditor(imageUri: Uri) {
         try {
             println("🚀 navigateToEditor:跳转到编辑器: $imageUri")
